@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('codigo_uid');
             $table->foreignId('cerveza_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('mililitros_consumidos', 8, 2);
-            $table->decimal('valor', 10, 2); // Agregando precisión
+            $table->decimal('precio_por_mililitro', 10, 2); // Agregando precisión
             $table->integer('estado')->default(1); // Corrección de comillas
             $table->timestamps();
         });

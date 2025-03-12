@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources;
 
+
 use App\Filament\Resources\TransaccionResource\Pages;
+use App\Filament\Resources\TransaccionResource\Pages\BuscarTransaccion;
 use App\Filament\Resources\TransaccionResource\RelationManagers;
 use App\Models\Transaccion;
 use Filament\Forms;
@@ -69,7 +71,7 @@ class TransaccionResource extends Resource
                 TextColumn::make('codigo_uid')->label('Código UID'),
                 TextColumn::make('cerveza.nombre')->label('Cerveza'),
                 TextColumn::make('mililitros_consumidos')->label('Mililitros')->sortable(),
-                TextColumn::make('valor')->label('Valor')->money('USD')->sortable(),
+                TextColumn::make('precio_por_mililitro')->label('Valor')->money('USD')->sortable(),
                 BadgeColumn::make('estado')
                     ->label('Estado')
                     ->colors([
@@ -107,6 +109,7 @@ class TransaccionResource extends Resource
             'index' => Pages\ListTransaccions::route('/'),
             'create' => Pages\CreateTransaccion::route('/create'),
             'edit' => Pages\EditTransaccion::route('/{record}/edit'),
+            'buscar' => BuscarTransaccion::route('/buscar'), // 🔥 Agregamos la nueva página
         ];
     }
 }

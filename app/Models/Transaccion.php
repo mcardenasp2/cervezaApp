@@ -15,7 +15,9 @@ class Transaccion extends Model
         'codigo_uid',
         'cerveza_id',
         'mililitros_consumidos',
-        'valor',
+        'precio_por_mililitro',
+        'total',
+        'pagado',
         'estado',
     ];
 
