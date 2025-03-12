@@ -58,7 +58,7 @@ class BuscarTransacciones extends Page
         ]);
 
         $transaccion->update(['estado' => 1]);
-
+        
         session()->flash('success', 'Pago realizado correctamente');
         $this->buscar();
     }

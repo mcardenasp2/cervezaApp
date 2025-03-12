@@ -33,6 +33,6 @@ class VentasEncabezado extends Model
     // Relación con los detalles de venta
     public function detalles()
     {
-        return $this->hasMany(VentasDetalle::class, 'cabecera_id');
+        return $this->hasMany(VentasDetalle::class, 'cabecera_id')->where('estado', 1);
     }
 }

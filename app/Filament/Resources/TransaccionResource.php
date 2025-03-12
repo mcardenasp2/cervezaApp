@@ -27,6 +27,8 @@ class TransaccionResource extends Resource
     protected static ?string $navigationLabel = 'Transacciones';
     protected static ?string $navigationGroup = 'Procesos';
 
+    protected static bool $shouldRegisterNavigation = false; // Oculta el recurso de la navegación
+    
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -109,7 +111,6 @@ class TransaccionResource extends Resource
             'index' => Pages\ListTransaccions::route('/'),
             'create' => Pages\CreateTransaccion::route('/create'),
             'edit' => Pages\EditTransaccion::route('/{record}/edit'),
-            'buscar' => BuscarTransaccion::route('/buscar'), // 🔥 Agregamos la nueva página
         ];
     }
 }

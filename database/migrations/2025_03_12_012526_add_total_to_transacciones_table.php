@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transacciones', function (Blueprint $table) {
-            $table->decimal('total', 10, 2)->after('valor'); // Agregando la nueva columna después de 'valor'
+            $table->decimal('total', 10, 2)->after('precio_por_mililitro'); // Agregando la nueva columna después de 'valor'
         });
     }
 
