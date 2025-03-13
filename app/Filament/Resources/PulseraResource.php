@@ -48,6 +48,7 @@ class PulseraResource extends Resource
         return $table
         ->columns([
             TextColumn::make('codigo_serial')->sortable()->searchable(),
+            TextColumn::make('codigo_uid')->sortable()->searchable(),
             BadgeColumn::make('estado')
                 ->label('Estado')
                 ->colors([
