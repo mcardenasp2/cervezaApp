@@ -34,6 +34,7 @@
                 <thead class="bg-gray-100">
                     <tr>
                         <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">ID</th>
+                        <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Cerveza</th>
                         <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Mililitros Consumidos</th>
                         <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Precio</th>
                         <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Total</th>
@@ -43,6 +44,7 @@
                     @foreach($transacciones as $transaccion)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->id }}</td>
+                            <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->cerveza->nombre }}</td>
                             <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->mililitros_consumidos }}</td>
                             <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->precio_por_mililitro }}</td>
                             <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->total }}</td>
