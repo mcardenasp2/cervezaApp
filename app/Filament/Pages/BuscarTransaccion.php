@@ -26,16 +26,28 @@ class BuscarTransaccion extends Page
 
     public $total = 0;
 
+    public array $notification = []; // Arreglo para la notificación
+
 
     public function buscar()
     {
+        $this->notification = [] ;
+        $this->total = 0 ;
+
         $this->transacciones = collect([]) ;
+
         $bracelet =Pulsera::where([
             ['estado', 1],
             ['codigo_uid', $this->codigo_uid]
         ])->first();
 
-        if(!$bracelet) return ;
+        if(!$bracelet) {
+            $this->notification = [
+                'message' => 'No existe este uid dentro del sistema.',
+                'color' => 'warning', // Colores de Filament: success, danger, warning, info
+            ];
+            return  ;
+        }
 
         $this->transacciones = Transaccion::where('pulsera_id' ,$bracelet->id)
             ->where([
@@ -45,6 +57,14 @@ class BuscarTransaccion extends Page
             ->get();
 
         $this->total = round($this->transacciones->sum('total'), 2) ;
+
+        if ($this->transacciones->count() === 0) {
+            $this->notification = [
+                'message' => 'No existen transacciones de esta pulsera.',
+                'color' => 'info', // Colores de Filament: success, danger, warning, info
+            ];
+        }
+
     }
 
 
@@ -52,6 +72,12 @@ class BuscarTransaccion extends Page
     public function saveSale()
     {
         if ($this->transacciones->isEmpty()) {
+
+            $this->notification = [
+                'message' => 'No existen registros para guardar',
+                'color' => 'error', // Colores de Filament: success, danger, warning, info
+            ];
+
             session()->flash('error', 'No hay transacciones para pagar.');
             return;
         }
@@ -80,12 +106,21 @@ class BuscarTransaccion extends Page
             $this->transacciones = collect([]);
             $this->total = 0 ;
             DB::commit() ;
-            
+
             session()->flash('success', 'Pago realizado con éxito.');
+
+            $this->notification = [
+                'message' => 'Registros Guardados con éxito',
+                'color' => 'success', // Colores de Filament: success, danger, warning, info
+            ];
 
         } catch (\Throwable $th) {
             DB::rollBack() ;
-            dd($th);
+
+            $this->notification = [
+                'message' => $th,
+                'error' => 'success', // Colores de Filament: success, danger, warning, info
+            ];
         }
     }
 

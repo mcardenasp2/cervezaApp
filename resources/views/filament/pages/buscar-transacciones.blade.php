@@ -1,4 +1,46 @@
 <x-filament-panels::page>
+
+<style>
+    .notification {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+    }
+
+    .notification.success {
+        background-color: #22c55e; /* Verde */
+        border-left: 4px solid #16a34a;
+    }
+
+    .notification.error {
+        background-color: #ef4444; /* Rojo */
+        border-left: 4px solid #dc2626;
+    }
+
+    .notification.warning {
+        background-color: #eab308; /* Amarillo */
+        border-left: 4px solid #ca8a04;
+    }
+
+    .notification.info {
+        background-color: #3b82f6; /* Azul */
+        border-left: 4px solid #2563eb;
+    }
+</style>
+
+    @if (!empty($notification))
+        <div class="notification {{ $notification['color'] }}">
+            <p>{{ $notification['message'] }}</p>
+        </div>
+    @endif
+
+
     <div class="flex items-center gap-4 mb-4">
         <input
             type="text"
