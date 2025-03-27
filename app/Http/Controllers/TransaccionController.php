@@ -13,12 +13,12 @@ class TransaccionController extends Controller
     {
         // Validar los datos de entrada
         $request->validate([
-            'pulsera_id' => 'required|exists:pulseras,id',
+            'codigo_uid' => 'required',
             'cerveza_id' => 'required|exists:cervezas,id',
             'mililitros_consumidos' => 'required|numeric|min:0',
         ]);
 
-        $bracelet = Pulsera::findOrFail($request->pulsera_id);
+        $bracelet = Pulsera::where('codigo_uid',$request->codigo_uid)->where('estado', 1)->first();
         $beer = Cerveza::findOrFail($request->cerveza_id);
 
         // Crear la transacción en la base de datos
