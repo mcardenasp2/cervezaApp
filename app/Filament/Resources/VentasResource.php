@@ -53,6 +53,10 @@ class VentasResource extends Resource
                 ->label('Código de Pulsera')
                 ->sortable()
                 ->searchable(),
+            TextColumn::make('cliente.nombres')
+            ->label('Cliente')
+            ->sortable()
+            ->searchable(),
             TextColumn::make('usuario.name')
                 ->label('Usuario')
                 ->sortable()

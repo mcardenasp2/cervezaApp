@@ -51,4 +51,9 @@ class VentasEncabezado extends Model
     {
         return $this->hasMany(VentasDetalle::class, 'cabecera_id')->where('estado', 1);
     }
+
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
 }

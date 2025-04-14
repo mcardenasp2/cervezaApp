@@ -33,9 +33,14 @@
     <h1>Reporte de Venta #{{ $record->id }}</h1>
     <h2>Venta</h2>
     <p><strong>Fecha y Hora:</strong> {{ $record->created_at }}</p>
-    <p><strong>Usuario:</strong> {{ $record->usuario->name }}</p>
-    <p><strong>Codigo Serial Pulsera:</strong> {{ $record->pulsera->codigo_serial }}</p>
-    <p><strong>Uid Pulsera:</strong> {{ $record->pulsera->codigo_uid }}</p>
+    <p><strong>Usuario (Registrado por):</strong> {{ $record->usuario->name }}</p>
+
+    <p><strong>Cliente:</strong> {{ $record->cliente->nombres ?? null }}</p>
+    <p><strong>Cédula del Cliente:</strong> {{ $record->cliente->cedula ?? null }}</p> {{-- aquí parece que estás mostrando el correo, podrías corregir si es cédula --}}
+    <p><strong>Correo del Cliente:</strong> {{ $record->cliente->correo ?? null }}</p>
+
+    <p><strong>Código Serial Pulsera:</strong> {{ $record->pulsera->codigo_serial }}</p>
+    <p><strong>UID Pulsera:</strong> {{ $record->pulsera->codigo_uid }}</p>
 
     <h2>Detalles de la Venta</h2>
     <table>
