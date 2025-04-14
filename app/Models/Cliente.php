@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Pulsera extends Model
+class Cliente extends Model
 {
     use HasFactory;
 
@@ -17,17 +17,17 @@ class Pulsera extends Model
     {
         return LogOptions::defaults()
             ->logAll() // <-- todas las columnas
-            ->useLogName('pulseras')
+            ->useLogName('clientes')
             ->logOnlyDirty() // solo si cambió algo
             ->dontSubmitEmptyLogs(); // no guardar si no hay cambios
     }
 
-    protected $table = 'pulseras';
+    protected $table = 'clientes';
 
-    protected $fillable = ['codigo_serial', 'codigo_uid', 'estado'];
-
-    public function transacciones()
-    {
-        return $this->hasMany(Transaccion::class);
-    }
+    protected $fillable = [
+        'cedula',
+        'nombres',
+        'estado',
+        'correo'
+    ];
 }
