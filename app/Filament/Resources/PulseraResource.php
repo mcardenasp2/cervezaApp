@@ -33,12 +33,12 @@ class PulseraResource extends Resource
                 TextInput::make('codigo_serial')
                     ->label('Código Serial')
                     ->required()
-                    ->unique(),
+                    ->unique(ignoreRecord: true),
 
                 TextInput::make('codigo_uid')
                     ->label('Código UID')
                     ->required()
-                    ->unique(),
+                    ->unique(ignoreRecord: true),
 
             ]);
     }

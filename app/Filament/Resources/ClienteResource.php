@@ -56,8 +56,8 @@ class ClienteResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('cedula'),
-                Tables\Columns\TextColumn::make('nombres'),
-                Tables\Columns\TextColumn::make('estado')
+                Tables\Columns\TextColumn::make('nombres')->sortable(),
+                Tables\Columns\TextColumn::make('estado')->sortable()
                     ->formatStateUsing(fn ($state) => $state ? 'Activo' : 'Inactivo')
                     ->color(fn ($state) => $state ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('correo'),

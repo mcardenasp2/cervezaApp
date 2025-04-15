@@ -55,15 +55,18 @@ class AsignacionPulseraResource extends Resource
 
             TextColumn::make('fecha_creacion')
                 ->label('Fecha Creación')
-                ->date('d/m/Y'),
+                ->date('d/m/Y')
+                ->sortable(),
 
             TextColumn::make('fecha_inicio_asignacion')
                 ->label('Inicio')
-                ->dateTime('d/m/Y H:i'),
+                ->dateTime('d/m/Y H:i')
+                ->sortable(),
 
             TextColumn::make('fecha_fin_asignacion')
                 ->label('Fin')
-                ->dateTime('d/m/Y H:i'),
+                ->dateTime('d/m/Y H:i')
+                ->sortable(),
 
             TextColumn::make('estado')
                 ->label('Estado')
@@ -80,6 +83,7 @@ class AsignacionPulseraResource extends Resource
                     2 => 'gray',
                 }),
         ])
+        ->defaultSort('fecha_inicio_asignacion', 'desc') // <-- aquí el orden por defecto
         ->filters([
             // puedes agregar filtros aquí si lo deseas
         ])

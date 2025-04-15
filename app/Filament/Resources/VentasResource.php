@@ -83,6 +83,7 @@ class VentasResource extends Resource
                 ->sortable()
                 ->searchable(),
         ])
+        ->defaultSort('created_at', 'desc')
         ->filters([
             // Aquí puedes agregar filtros si es necesario
         ])
@@ -110,7 +111,7 @@ class VentasResource extends Resource
     {
         return [
             'index' => Pages\ListVentas::route('/'),
-            
+
 
         ];
     }
