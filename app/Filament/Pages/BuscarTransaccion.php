@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Resources\AsignacionPulseraResource\Pages\AsignarPulsera;
 use App\Filament\Resources\TransaccionResource;
 use App\Models\AsignacionPulsera;
 use App\Models\Pulsera;
@@ -46,6 +45,18 @@ class BuscarTransaccion extends Page
         if(!$bracelet) {
             $this->notification = [
                 'message' => 'No existe este uid dentro del sistema.',
+                'color' => 'warning', // Colores de Filament: success, danger, warning, info
+            ];
+            return  ;
+        }
+
+        $assignBracelet = AsignacionPulsera::where('pulsera_id', $bracelet->id)
+            ->where('estado', 1)
+            ->first();
+
+        if (!$assignBracelet){
+            $this->notification = [
+                'message' => 'La pulsera no se encuentra asignada a un cliente.',
                 'color' => 'warning', // Colores de Filament: success, danger, warning, info
             ];
             return  ;
