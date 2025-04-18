@@ -53,6 +53,10 @@ class VentasResource extends Resource
                 ->label('Código de Pulsera')
                 ->sortable()
                 ->searchable(),
+            TextColumn::make('cliente.nombres')
+            ->label('Cliente')
+            ->sortable()
+            ->searchable(),
             TextColumn::make('usuario.name')
                 ->label('Usuario')
                 ->sortable()
@@ -79,6 +83,7 @@ class VentasResource extends Resource
                 ->sortable()
                 ->searchable(),
         ])
+        ->defaultSort('created_at', 'desc')
         ->filters([
             // Aquí puedes agregar filtros si es necesario
         ])
@@ -106,7 +111,7 @@ class VentasResource extends Resource
     {
         return [
             'index' => Pages\ListVentas::route('/'),
-            
+
 
         ];
     }

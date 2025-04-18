@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\CervezaResource\Pages;
+namespace App\Filament\Resources\ClienteResource\Pages;
 
-use App\Filament\Resources\CervezaResource;
+use App\Filament\Resources\ClienteResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditCerveza extends EditRecord
+class EditCliente extends EditRecord
 {
-    protected static string $resource = CervezaResource::class;
+    protected static string $resource = ClienteResource::class;
 
     protected function getHeaderActions(): array
     {

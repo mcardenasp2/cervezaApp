@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePulsera extends CreateRecord
 {
     protected static string $resource = PulseraResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Transaccion extends Model
+class AsignacionPulsera extends Model
 {
+
     use HasFactory;
 
     use LogsActivity;
@@ -17,31 +18,33 @@ class Transaccion extends Model
     {
         return LogOptions::defaults()
             ->logAll() // <-- todas las columnas
-            ->useLogName('transacciones')
+            ->useLogName('asignacion_pulseras')
             ->logOnlyDirty() // solo si cambió algo
             ->dontSubmitEmptyLogs(); // no guardar si no hay cambios
     }
 
-    protected $table = 'transacciones';
+    protected $table = 'asignacion_pulseras';
 
     protected $fillable = [
+        'cliente_id',
+        'usuario_id',
         'pulsera_id',
-        'codigo_uid',
-        'cerveza_id',
-        'mililitros_consumidos',
-        'precio_por_mililitro',
-        'total',
-        'pagado',
+        'fecha_creacion',
+        'fecha_inicio_asignacion',
+        'fecha_fin_asignacion',
         'estado',
     ];
 
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+    public function usuario()
+    {
+        return $this->belongsTo(User::class);
+    }
     public function pulsera()
     {
-        return $this->belongsTo(Pulsera::class, 'pulsera_id');
-    }
-
-    public function cerveza()
-    {
-        return $this->belongsTo(Cerveza::class);
+        return $this->belongsTo(Pulsera::class);
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\AsignacionPulseraResource\Pages\AsignarPulsera;
 use App\Filament\Resources\TransaccionResource;
+use App\Models\AsignacionPulsera;
 use App\Models\Pulsera;
 use App\Models\Transaccion;
 use App\Models\VentasDetalle;
@@ -85,11 +87,22 @@ class BuscarTransaccion extends Page
         try {
             DB::beginTransaction() ;
 
+
+            $assignBracelet = AsignacionPulsera::where('pulsera_id',$this->transacciones->first()->pulsera_id)
+                ->where('estado', 1)->first();
+
+            $transaccionesIdsAll = $this->transacciones->pluck('id')->toArray();
+
+
             $salesHeader = VentasEncabezado::create([
                     'pulsera_id' => $this->transacciones->first()->pulsera_id,
                     'user_id' => Auth::user()->id,
-                    'total' => round($this->transacciones->sum('total'), 2)
+                    'total' => round($this->transacciones->sum('total'), 2),
+                    'asignacion_pulsera_id' => $assignBracelet->id,
+                    'cliente_id' => $assignBracelet->cliente_id,
+                    'transacciones_ids' => json_encode($transaccionesIdsAll)
                 ]);
+
 
             foreach ($this->transacciones as $key => $value) {
                 VentasDetalle::create([
@@ -100,6 +113,10 @@ class BuscarTransaccion extends Page
                     'total' => $value->total,
                 ]);
             }
+
+            $assignBracelet->estado = 2;
+            $assignBracelet->fecha_fin_asignacion = now();
+            $assignBracelet->save();
 
             $transactionid = $this->transacciones->pluck('id');
             Transaccion::whereIn('id', $transactionid )->update(['pagado'=> 1]) ;
@@ -119,7 +136,7 @@ class BuscarTransaccion extends Page
 
             $this->notification = [
                 'message' => $th,
-                'error' => 'success', // Colores de Filament: success, danger, warning, info
+                'color' => 'error', // Colores de Filament: success, danger, warning, info
             ];
         }
     }
