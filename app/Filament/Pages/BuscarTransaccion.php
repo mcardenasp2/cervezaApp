@@ -37,10 +37,12 @@ class BuscarTransaccion extends Page
 
         $this->transacciones = collect([]) ;
 
-        $bracelet =Pulsera::where([
-            ['estado', 1],
-            ['codigo_uid', $this->codigo_uid]
-        ])->orWhere('codigo_serial', $this->codigo_uid )->first();
+        $bracelet = Pulsera::where('estado', 1)
+            ->where(function ($query) {
+                $query->where('codigo_uid', $this->codigo_uid)
+                    ->orWhere('codigo_serial', $this->codigo_uid);
+            })
+            ->first();
 
         if(!$bracelet) {
             $this->notification = [
