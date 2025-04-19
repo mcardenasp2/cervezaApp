@@ -111,6 +111,29 @@ class AsignarPulsera extends Page implements HasForms
             return;
         }
 
+        $braceletAssignment = AsignacionPulsera::where('pulsera_id', $this->pulsera_id)
+            ->where('estado', 1)->first();
+
+        if ($braceletAssignment) {
+            Notification::make()
+                ->title('Pulsera ya asignada')
+                ->body('La pulsera ya está asignada a otro cliente.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $client = Cliente::find($this->cliente_id);
+
+        if (!$client) {
+            Notification::make()
+                ->title('Cliente no encontrado')
+                ->body('El cliente seleccionado no existe.')
+                ->danger()
+                ->send();
+            return;
+        }
+
         AsignacionPulsera::create([
             'cliente_id' => $this->cliente_id,
             'pulsera_id' => $this->pulsera_id,
