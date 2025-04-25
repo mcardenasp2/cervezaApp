@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\PulserasController;
 use App\Http\Controllers\TransaccionController;
+use App\Models\Pulsera;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +22,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/transacciones', [TransaccionController::class, 'store']);
+Route::post('/verificar-asignacion', [PulserasController::class, 'checkAssignation']);
+Route::post('/pulseras', [PulserasController::class, 'store']);
 

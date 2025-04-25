@@ -18,7 +18,10 @@ class TransaccionController extends Controller
             'mililitros_consumidos' => 'required|numeric|min:0',
         ]);
 
-        $bracelet = Pulsera::where('codigo_uid',$request->codigo_uid)->where('estado', 1)->first();
+        $code = substr(trim($request->codigo_uid), 0, 8);
+
+        $bracelet = Pulsera::where('codigo_uid',$code)->where('estado', 1)->first();
+
         $beer = Cerveza::findOrFail($request->cerveza_id);
 
         // Crear la transacción en la base de datos
@@ -32,11 +35,13 @@ class TransaccionController extends Controller
             'estado' => 1, // Estado por defecto
         ]);
 
+
         return response()->json([
             'message' => 'Transacción registrada con éxito',
             'data' => $transaction,
         ], 201);
     }
+
 
 
 }
