@@ -16,4 +16,12 @@ class ListVentas extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
+
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('venta-listar')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
+    }
 }

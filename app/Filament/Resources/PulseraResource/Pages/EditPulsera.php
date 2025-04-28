@@ -20,4 +20,14 @@ class EditPulsera extends EditRecord
     {
         return $this->getResource()::getUrl('index');
     }
+
+    public function mount($record): void
+    {
+        // Aquí estamos verificando el permiso antes de permitir la edición
+        if (!auth()->user()->can('pulsera-editar')) {
+            abort(403); // Si no tiene el permiso, denegamos el acceso
+        }
+        // Llamar al método mount del padre para que Filament lo procese correctamente
+        parent::mount($record);
+    }
 }

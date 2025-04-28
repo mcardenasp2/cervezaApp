@@ -154,5 +154,19 @@ class BuscarTransaccion extends Page
         }
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->can('venta-crear');
+    }
+
+
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('venta-crear')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
+    }
+
 
 }

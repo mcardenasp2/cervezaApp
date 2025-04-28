@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\UserResource\Pages;
+namespace App\Filament\Resources\PermissionResource\Pages;
 
-use App\Filament\Resources\UserResource;
+use App\Filament\Resources\PermissionResource;
 use Filament\Actions;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateUser extends CreateRecord
+class CreatePermission extends CreateRecord
 {
-    protected static string $resource = UserResource::class;
+    protected static string $resource = PermissionResource::class;
 
     protected function getRedirectUrl(): string
     {
@@ -20,7 +19,7 @@ class CreateUser extends CreateRecord
     {
         parent::mount(); // ⚡ LLAMAS AL MOUNT ORIGINAL DE FILAMENT
 
-        if (!auth()->user()->can('usuario-crear')) {
+        if (!auth()->user()->can('permisos-crear')) {
             abort(403); // Acceso denegado si no tiene el permiso
         }
     }

@@ -24,6 +24,17 @@ class ClienteResource extends Resource
 
     protected static ?string $navigationGroup = 'Mantenimiento';
 
+    public static function getNavigationItems(): array
+    {
+        $navigationItems = parent::getNavigationItems();
+
+        if (auth()->user()->can('cliente-listar')) {
+            return $navigationItems;  // Si tiene el permiso, muestra el recurso
+        }
+
+        return [];  // Si no tiene el permiso, no muestra el recurso
+    }
+
 
     public static function form(Form $form): Form
     {
@@ -66,11 +77,17 @@ class ClienteResource extends Resource
                 //
             ])
             ->actions([
-                EditAction::make(),
+                EditAction::make()
+                ->visible(function () {
+                    return auth()->user()->can('cliente-editar');
+                }),
                 DeleteAction::make()
                     ->action(function ($record) {
                         $record->estado = 0;
                         $record->save();
+                    })
+                    ->visible(function () {
+                        return auth()->user()->can('cliente-eliminar');
                     })
                     ->label('Dar de baja')
                     ->requiresConfirmation()

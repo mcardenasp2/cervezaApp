@@ -13,7 +13,17 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->visible(function () {
+                    return auth()->user()->can('usuario-crear');
+                }),
         ];
+    }
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('usuario-listar')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
     }
 }
