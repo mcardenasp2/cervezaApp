@@ -5,6 +5,7 @@ namespace App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Spatie\Permission\PermissionRegistrar;
 
 class EditUser extends EditRecord
 {
@@ -16,6 +17,12 @@ class EditUser extends EditRecord
 
         ];
     }
+
+    protected function afterSave(): void
+    {
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+    }
+
 
     protected function getRedirectUrl(): string
     {

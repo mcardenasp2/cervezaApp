@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource;
 use Filament\Actions;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\CreateRecord;
+use Spatie\Permission\PermissionRegistrar;
 
 class CreateUser extends CreateRecord
 {
@@ -14,6 +15,11 @@ class CreateUser extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function afterSave(): void
+    {
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 
     public function mount(): void

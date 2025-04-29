@@ -12,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\PermissionRegistrar;
 
 class CreateRolePermissions extends Page
 {
@@ -78,7 +79,7 @@ class CreateRolePermissions extends Page
         if (!$this->name || !$this->guard_name) {
             Notification::make()
                 ->title('Faltan datos')
-                ->body('Debe seleccionar un cliente y una pulsera.')
+                ->body('Debe seleccionar el nombre y el guard.')
                 ->danger()
                 ->send();
 
@@ -116,6 +117,8 @@ class CreateRolePermissions extends Page
             }
 
             DB::commit();
+
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
             return redirect(static::getResource()::getUrl('index'));
 
