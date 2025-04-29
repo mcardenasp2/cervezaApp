@@ -32,11 +32,17 @@ class AsignarPulsera extends Page implements HasForms
     {
         return [
             Action::make('clientes')
+                ->visible(function () {
+                    return auth()->user()->can('cliente-listar');
+                })
                 ->label('Ir a Clientes')
                 ->icon('heroicon-o-user-group')
                 ->url(ClienteResource::getUrl()),
 
             Action::make('pulseras')
+                ->visible(function () {
+                    return auth()->user()->can('pulsera-listar');
+                })
                 ->label('Ir a Pulseras')
                 ->icon('heroicon-o-rectangle-stack')
                 ->url(PulseraResource::getUrl()),
@@ -96,6 +102,9 @@ class AsignarPulsera extends Page implements HasForms
 
     public function mount()
     {
+        if (!auth()->user()->can('asignacion-pulsera-crear')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
         $this->form->fill();
     }
 

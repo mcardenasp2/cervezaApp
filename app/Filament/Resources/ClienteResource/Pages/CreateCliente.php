@@ -14,4 +14,11 @@ class CreateCliente extends CreateRecord
     {
         return $this->getResource()::getUrl('index');
     }
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('cliente-crear')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
+    }
 }

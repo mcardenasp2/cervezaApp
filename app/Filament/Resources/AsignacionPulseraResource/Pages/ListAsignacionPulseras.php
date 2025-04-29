@@ -17,18 +17,34 @@ class ListAsignacionPulseras extends ListRecords
     {
         return [
             Action::make('clientes')
+                ->visible(function () {
+                    return auth()->user()->can('cliente-listar');
+                })
                 ->label('Ir a Clientes')
                 ->icon('heroicon-o-user-group')
                 ->url(ClienteResource::getUrl()),
 
             Action::make('pulseras')
+                ->visible(function () {
+                    return auth()->user()->can('pulsera-listar');
+                })
                 ->label('Ir a Pulseras')
                 ->icon('heroicon-o-rectangle-stack')
                 ->url(PulseraResource::getUrl()),
             Action::make('asignar')
+            ->visible(function () {
+                return auth()->user()->can('asignacion-pulsera-crear');
+            })
             ->label('Asignar') // Cambia el texto del botón
             ->icon('heroicon-o-plus-circle')
             ->url(AsignacionPulseraResource::getUrl('asignar-pulsera')),
         ];
+    }
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('asignacion-pulsera-listar')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
     }
 }

@@ -13,7 +13,17 @@ class ListCervezas extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+            ->visible(function () {
+                return auth()->user()->can('cerveza-crear');
+            }),
         ];
+    }
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('cerveza-listar')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
     }
 }

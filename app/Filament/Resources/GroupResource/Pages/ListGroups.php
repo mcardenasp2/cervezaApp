@@ -1,28 +1,28 @@
 <?php
 
-namespace App\Filament\Resources\PulseraResource\Pages;
+namespace App\Filament\Resources\GroupResource\Pages;
 
-use App\Filament\Resources\PulseraResource;
+use App\Filament\Resources\GroupResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListPulseras extends ListRecords
+class ListGroups extends ListRecords
 {
-    protected static string $resource = PulseraResource::class;
+    protected static string $resource = GroupResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make()
             ->visible(function () {
-                return auth()->user()->can('pulsera-crear');
+                return auth()->user()->can('grupo-crear');
             }),
         ];
     }
 
     public function mount(): void
     {
-        if (!auth()->user()->can('pulsera-listar')) {
+        if (!auth()->user()->can('grupo-listar')) {
             abort(403); // Acceso denegado si no tiene el permiso
         }
     }

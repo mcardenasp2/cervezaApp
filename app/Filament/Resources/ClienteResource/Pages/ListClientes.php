@@ -14,8 +14,19 @@ class ListClientes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+            ->visible(function () {
+                // Solo mostrar el botón "Crear" si el usuario tiene el permiso 'usuario-crear'
+                return auth()->user()->can('cliente-crear');
+            }),
         ];
+    }
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('cliente-listar')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
     }
 
 }

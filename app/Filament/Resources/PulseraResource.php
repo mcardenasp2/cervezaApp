@@ -26,6 +26,17 @@ class PulseraResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-archive-box';
     protected static ?string $navigationGroup = 'Mantenimiento';
 
+    public static function getNavigationItems(): array
+    {
+        $navigationItems = parent::getNavigationItems();
+
+        if (auth()->user()->can('pulsera-listar')) {
+            return $navigationItems;  // Si tiene el permiso, muestra el recurso
+        }
+
+        return [];  // Si no tiene el permiso, no muestra el recurso
+    }
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -58,8 +69,14 @@ class PulseraResource extends Resource
                 ->formatStateUsing(fn ($state) => $state == 1 ? 'Activo' : 'Inactivo'),
         ])
         ->actions([
-            EditAction::make(),
+            EditAction::make()
+                ->visible(function () {
+                    return auth()->user()->can('pulsera-editar');
+                }),
             Action::make('desactivar')
+                    ->visible(function () {
+                        return auth()->user()->can('pulsera-eliminar');
+                    })
                     ->label('Desactivar')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
@@ -78,9 +95,4 @@ class PulseraResource extends Resource
         ];
     }
 
-
-    // public static function getEloquentQuery(): Builder
-    // {
-    //     return parent::getEloquentQuery()->orderBy('codigo_serial');
-    // }
 }

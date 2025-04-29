@@ -25,6 +25,17 @@ class AsignacionPulseraResource extends Resource
 
     protected static ?string $navigationGroup = 'Procesos';
 
+    public static function getNavigationItems(): array
+    {
+        $navigationItems = parent::getNavigationItems();
+
+        if (auth()->user()->can('asignacion-pulsera-listar')) {
+            return $navigationItems;  // Si tiene el permiso, muestra el recurso
+        }
+
+        return [];  // Si no tiene el permiso, no muestra el recurso
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -89,6 +100,9 @@ class AsignacionPulseraResource extends Resource
         ])
         ->actions([
             Action::make('eliminar')
+                ->visible(function () {
+                    return auth()->user()->can('asignacion-pulsera-eliminar');
+                })
                 ->label('Eliminar') // El nombre del botón
                 ->icon('heroicon-o-trash')
                 ->color('danger')
@@ -150,8 +164,6 @@ class AsignacionPulseraResource extends Resource
     {
         return [
             'index' => Pages\ListAsignacionPulseras::route('/'),
-            // 'create' => Pages\CreateAsignacionPulsera::route('/create'),
-            // 'edit' => Pages\EditAsignacionPulsera::route('/{record}/edit'),
             'asignar-pulsera' => Pages\AsignarPulsera::route('/asignar'), // <-- esto
         ];
     }

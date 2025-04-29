@@ -14,4 +14,11 @@ class CreatePulsera extends CreateRecord
     {
         return $this->getResource()::getUrl('index');
     }
+
+    public function mount(): void
+    {
+        if (!auth()->user()->can('pulsera-crear')) {
+            abort(403); // Acceso denegado si no tiene el permiso
+        }
+    }
 }
