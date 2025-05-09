@@ -126,19 +126,19 @@ class PromocionResource extends Resource
                     ->visible(function () {
                         return auth()->user()->can('promocion_editar');
                     })
-                    ->label('')
+                    ->iconButton()
                     ->color('info')
-                    ->button()
+                    
                     ->tooltip('Editar promoción'),
                 Tables\Actions\Action::make('asignarCervezas')
                 ->visible(function () {
                     return auth()->user()->can('promocion_crear_detalle');
                 })
-                ->label('')
+                ->iconButton()
                 ->tooltip('Asignar cervezas a la promoción')
                 ->color('success')
                 ->icon('heroicon-o-plus')
-                ->button()
+                
                 ->modalHeading('Asignar Cervezas')
                 ->modalSubheading(fn ($record) => $record->nombre)
                 ->modalSubmitAction(function ($record, $data) {
@@ -161,8 +161,7 @@ class PromocionResource extends Resource
                     $record->cervezas()->sync($data['cervezas']);
                 }),
                 Tables\Actions\Action::make('finalizar')
-                    ->label('')
-                    ->button()
+                    ->iconButton()
                     ->tooltip('Finalizar promoción')
                     ->icon('heroicon-o-check')
                     ->color('warning')
@@ -173,9 +172,8 @@ class PromocionResource extends Resource
                     ->visible(function () {
                         return auth()->user()->can('promocion_eliminar');
                     })
-                    ->button()
                     ->tooltip('Desactivar promoción')
-                    ->label('')
+                    ->iconButton()
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     
