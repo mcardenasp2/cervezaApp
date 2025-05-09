@@ -29,4 +29,9 @@ class Cerveza extends Model
         'precio_por_mililitro',
         'estado',
     ];
+
+    public function promociones()
+    {
+        return $this->belongsToMany(Promocion::class, 'promociones_productos')->withTimestamps();
+    }
 }

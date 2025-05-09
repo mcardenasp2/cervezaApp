@@ -11,10 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cervezas', function (Blueprint $table) {
+        Schema::create('promociones', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->decimal('precio_por_mililitro', 8, 4);
+            $table->string('tipo');
+            $table->integer('cantidad');
+            $table->integer('pagar');
+            $table->float('desde_mililitros');
+            $table->float('hasta_mililitros');
+            $table->date('fecha_inicio');
+            $table->date('fecha_fin');
+            $table->text('descripcion');
             $table->integer('estado')->default(1);
             $table->timestamps();
         });
@@ -25,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cervezas');
+        Schema::dropIfExists('promociones');
     }
 };
