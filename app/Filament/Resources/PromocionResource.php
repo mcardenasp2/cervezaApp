@@ -10,6 +10,7 @@ use Dom\Text;
 use Filament\Actions\Modal\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -68,18 +69,20 @@ class PromocionResource extends Resource
                     ->maxLength(255),
                 TextInput::make('desde_mililitros')
                     ->numeric()
-                    ->label('Desde')
+                    ->label('Desde Mililítros')
                     ->required()
                     ->maxLength(255),
                 TextInput::make('hasta_mililitros')
                     ->numeric()
-                    ->label('Hasta')
+                    ->label('Hasta Mililítros')
                     ->required()
                     ->maxLength(255),
-                DatePicker::make('fecha_inicio')
+                DateTimePicker::make('fecha_inicio')
                     ->label('Fecha Inicio')
+                    ->format('Y-m-d H:i:s')
                     ->required(),
-                DatePicker::make('fecha_fin')
+                DateTimePicker::make('fecha_fin')
+                    ->format('Y-m-d H:i:s')
                     ->label('Fecha Fin')
                     ->required(),
                 Textarea::make('descripcion')
@@ -98,10 +101,10 @@ class PromocionResource extends Resource
                     ->searchable(),
                 TextColumn::make('fecha_inicio')
                     ->label('Fecha Desde')
-                    ->date('d/m/Y'),
+                    ->date('Y-m-d H:i:s'),
                 TextColumn::make('fecha_fin')
                     ->label('Fecha Hasta')
-                    ->date('d/m/Y'),
+                    ->date('Y-m-d  H:i:s'),
                 TextColumn::make('rango_mililitros')
                     ->label('Rango Mililitros')
                     ->getStateUsing(function ($record) {
@@ -122,13 +125,20 @@ class PromocionResource extends Resource
                 Tables\Actions\EditAction::make()
                     ->visible(function () {
                         return auth()->user()->can('promocion_editar');
-                    }),
+                    })
+                    ->label('')
+                    ->color('info')
+                    ->button()
+                    ->tooltip('Editar promoción'),
                 Tables\Actions\Action::make('asignarCervezas')
                 ->visible(function () {
                     return auth()->user()->can('promocion_crear_detalle');
                 })
-                ->label('Asignar')
-                ->icon('heroicon-o-eye')
+                ->label('')
+                ->tooltip('Asignar cervezas a la promoción')
+                ->color('success')
+                ->icon('heroicon-o-plus')
+                ->button()
                 ->modalHeading('Asignar Cervezas')
                 ->modalSubheading(fn ($record) => $record->nombre)
                 ->modalSubmitAction(function ($record, $data) {
@@ -150,6 +160,25 @@ class PromocionResource extends Resource
                 ->action(function ($record, array $data) {
                     $record->cervezas()->sync($data['cervezas']);
                 }),
+                Tables\Actions\Action::make('finalizar')
+                    ->label('')
+                    ->button()
+                    ->tooltip('Finalizar promoción')
+                    ->icon('heroicon-o-check')
+                    ->color('warning')
+                    ->visible(function(){
+                        return auth()->user()->can('promocion_finalizar');
+                    }),
+                Tables\Actions\Action::make('desactivar')
+                    ->visible(function () {
+                        return auth()->user()->can('promocion_eliminar');
+                    })
+                    ->button()
+                    ->tooltip('Desactivar promoción')
+                    ->label('')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    
 
             ])
             ->bulkActions([

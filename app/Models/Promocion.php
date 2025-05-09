@@ -4,10 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Promocion extends Model
 {
     use HasFactory;
+
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll() // <-- todas las columnas
+            ->useLogName('promociones')
+            ->logOnlyDirty() // solo si cambió algo
+            ->dontSubmitEmptyLogs(); // no guardar si no hay cambios
+    }
 
     protected $table = 'promociones';
 
@@ -24,10 +37,6 @@ class Promocion extends Model
         'estado'
     ];
 
-    protected $casts = [
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
-    ];
 
 
     public function cervezas()

@@ -19,8 +19,8 @@ return new class extends Migration
             $table->integer('pagar');
             $table->float('desde_mililitros');
             $table->float('hasta_mililitros');
-            $table->date('fecha_inicio');
-            $table->date('fecha_fin');
+            $table->dateTime('fecha_inicio');
+            $table->dateTime('fecha_fin');
             $table->text('descripcion');
             $table->integer('estado')->default(1);
             $table->timestamps();
