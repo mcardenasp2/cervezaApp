@@ -174,8 +174,8 @@
                         <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">ID</th>
                         <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Cerveza</th>
                         <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Mililitros Consumidos</th>
-                        <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Precio</th>
-                        <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700">Total</th>
+                        <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700 text-right">Precio</th>
+                        <th class="px-6 py-3 border-b border-gray-200 text-left text-sm font-medium text-gray-700 text-right">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -184,10 +184,49 @@
                             <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->id }}</td>
                             <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->cerveza->nombre }}</td>
                             <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->mililitros_consumidos }}</td>
-                            <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->precio_por_mililitro }}</td>
-                            <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->total }}</td>
+                            <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700 text-right">{{ $transaccion->precio_por_mililitro }}</td>
+                            <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700 text-right">{{ $transaccion->total }}</td>
                         </tr>
                     @endforeach
+
+
+
+                    @php
+                        $descuentos = [
+                            ['descripcion' => 'Promo 3x2', 'monto' => 5.00],
+                            ['descripcion' => 'Descuento 5x3', 'monto' => 6.00],
+                        ];
+                        $totalDescuento = collect($descuentos)->sum('monto');
+                        $totalPagar = $transacciones->sum('total') - $totalDescuento;
+
+                    @endphp
+
+                    <!-- Total general -->
+                    <tr class="bg-gray-100 font-bold">
+                        <td colspan="4" class="px-6 py-4 text-right text-sm text-gray-800">Valor a Pagar</td>
+                        <td class="px-6 py-4 text-right text-sm text-gray-800">${{ number_format($totalPagar, 2) }}</td>
+                    </tr>
+
+                    @if(!empty($descuentos))
+                        @foreach($descuentos as $d)
+                            <tr class="bg-yellow-50">
+                                <td colspan="4" class="px-6 py-4 text-right text-sm text-gray-800">
+                                    Descuento: {{ $d['descripcion'] }}
+                                </td>
+                                <td class="px-6 py-4 text-right text-sm text-red-600 font-semibold">
+                                    - ${{ number_format($d['monto'], 2) }}
+                                </td>
+                            </tr>
+                        @endforeach
+
+
+                    @endif
+                    <!-- Total general -->
+                    <tr class="bg-gray-100 font-bold">
+                        <td colspan="4" class="px-6 py-4 text-right text-sm text-gray-800">Total a Pagar</td>
+                        <td class="px-6 py-4 text-right text-sm text-gray-800">${{ number_format($totalPagar, 2) }}</td>
+                    </tr>
+
                 </tbody>
             </table>
         </div>
