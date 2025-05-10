@@ -40,6 +40,102 @@
         </div>
     @endif
 
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="col-span-1">
+            {{ $this->form }}
+        </div>
+
+        <div class="col-span-1 flex justify-end items-center gap-4">
+              <x-filament::button
+                    color="success"
+                >
+                    Pagar
+                </x-filament::button>
+        </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Primera columna: Datos del cliente -->
+            @php
+                $cliente = (object)[
+                        'nombre' => 'Juan Pérez',
+                        'correo' => 'jasgagsg@gmail.com',
+                        'telefono' => '123456789',
+            ];
+                // Aquí puedes obtener los datos del cliente desde la base de datos o cualquier otra fuente
+            @endphp
+        <!-- Primera columna: Datos del cliente -->
+        <div class="col-span-1 justify-start items-center gap-4 w-full">
+            <h3 class="font-semibold text-xl">Datos del Cliente</h3>
+
+            <!-- Bloques de datos del cliente -->
+            <div class="space-y-4 bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between">
+                    <p class="text-lg font-medium text-gray-600"><strong>Nombre:</strong></p>
+                    <p class="text-lg text-gray-800">{{ $cliente->nombre }}</p>
+                </div>
+                <div class="flex justify-between">
+                    <p class="text-lg font-medium text-gray-600"><strong>Correo:</strong></p>
+                    <p class="text-lg text-gray-800">{{ $cliente->correo }}</p>
+                </div>
+                <div class="flex justify-between">
+                    <p class="text-lg font-medium text-gray-600"><strong>Teléfono:</strong></p>
+                    <p class="text-lg text-gray-800">{{ $cliente->telefono }}</p>
+                </div>
+                <!-- Agrega más datos según sea necesario -->
+            </div>
+        </div>
+
+        <!-- Segunda columna: Valor a pagar, descuento y total -->
+
+
+        @php
+            $valorPagar = 0; // Cambia esto por el valor real
+            $descuento = 0; // Cambia esto por el descuento real
+            $totalPagar = $valorPagar - $descuento;
+        @endphp
+        <div class="col-span-1 flex justify-end items-center gap-4 w-full">
+            <div class="space-y-2 w-full">
+                <h3 class="font-semibold text-lg">Resumen de Pago</h3>
+
+                <!-- Tabla con los detalles de pago -->
+                <table class="table-auto w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-2 text-left font-medium text-gray-600">Descripción</th>
+                            <th class="px-4 py-2 text-right font-medium text-gray-600">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-4 py-2">Valor a Pagar</td>
+                            <td class="px-4 py-2 text-right">${{ number_format($valorPagar, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2">Descuento</td>
+                            <td class="px-4 py-2 text-right">${{ number_format($descuento, 2) }}</td>
+                        </tr>
+                        <tr class="font-semibold">
+                            <td class="px-4 py-2">Total a Pagar</td>
+                            <td class="px-4 py-2 text-right">${{ number_format($totalPagar, 2) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+                {{-- <x-filament::button color="success">
+                    Pagar
+                </x-filament::button> --}}
+
+
+    </div>
+
+
+
+
+
+
 
     <div class="flex items-center gap-4 mb-4">
         <input

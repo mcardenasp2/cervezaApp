@@ -8,6 +8,9 @@ use App\Models\Pulsera;
 use App\Models\Transaccion;
 use App\Models\VentasDetalle;
 use App\Models\VentasEncabezado;
+use Filament\Forms\Components\Select;
+use Filament\Pages\Actions\ButtonAction;
+use Filament\Pages\Actions\Modal\Actions\ButtonAction as ActionsButtonAction;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +31,34 @@ class BuscarTransaccion extends Page
     public $total = 0;
 
     public array $notification = []; // Arreglo para la notificación
+
+
+    protected function getFormSchema(): array
+    {
+        return [
+            Select::make('codigo_uid')
+                ->label('UID o Serial')
+                ->placeholder('Ingrese el UID o Serial de la pulsera')
+                ->required()
+                ->searchable()
+                ->getSearchResultsUsing(function (string $search){
+                    return Pulsera::where('estado', 1)
+                        ->where(function ($query) use ($search) {
+                            $query->whereRaw('LOWER(codigo_uid) LIKE ?', ['%' . strtolower($search) . '%'])
+                                ->orWhereRaw('LOWER(codigo_serial) LIKE ?', ['%' . strtolower($search) . '%']);
+                        })
+                        ->limit(10)
+                        ->get()
+                        ->mapWithKeys( function ($pulsera) {
+                            $label = $pulsera->codigo_uid . ' - ' . $pulsera->codigo_serial;
+                            return [
+                                $pulsera->id => $label,
+                            ];
+                        });
+                }),
+
+        ];
+    }
 
 
     public function buscar()
@@ -167,6 +198,7 @@ class BuscarTransaccion extends Page
             abort(403); // Acceso denegado si no tiene el permiso
         }
     }
+
 
 
 }
