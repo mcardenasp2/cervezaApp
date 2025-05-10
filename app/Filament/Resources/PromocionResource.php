@@ -25,6 +25,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\Actions\Modal\Action as ModalAction;
+
+
 
 class PromocionResource extends Resource
 {
@@ -112,6 +115,13 @@ class PromocionResource extends Resource
                     ->getStateUsing(function ($record) {
                         return $record->desde_mililitros . ' - ' . $record->hasta_mililitros;
                     }),
+
+                TextColumn::make('cervezas.nombre')
+                    ->label('Cervezas')
+                    ->badge()
+                    ->toggleable()
+                    ->separator(', '),
+
                 BadgeColumn::make('estado')
                     ->label('Estado')
                     ->colors([
@@ -148,10 +158,8 @@ class PromocionResource extends Resource
                 ->icon('heroicon-o-plus')
                 ->modalHeading('Asignar Cervezas')
                 ->modalSubheading(fn ($record) => $record->nombre)
-                ->modalSubmitAction(function ($record, $data) {
-
-                })
                 ->modalSubmitActionLabel('Guardar') // Cambiar el nombre del botón de submit
+                ->disabled(fn ($record) => $record->estado !== 1)
                 ->modalCancelActionLabel('Cerrar')
                 ->form([
                     Select::make('cervezas') // Esto es el campo que tendrá las cervezas seleccionadas
