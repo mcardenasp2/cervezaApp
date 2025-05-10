@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PromocionResource\Pages;
 use App\Filament\Resources\PromocionResource\RelationManagers;
 use App\Models\Cerveza;
+use App\Models\DetallePromocionAplicada;
 use App\Models\Promocion;
 use Dom\Text;
 use Filament\Actions\Modal\Actions\Action;
@@ -15,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\View\Components\Modal;
 use Filament\Tables;
@@ -115,8 +117,14 @@ class PromocionResource extends Resource
                     ->colors([
                         'success' => 1,
                         'danger' => 0,
+                        'gray' => 2,
                     ])
-                    ->formatStateUsing(fn ($state) => $state == 1 ? 'Activo' : 'Inactivo'),
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        0 => 'Inactivo',
+                        1 => 'Iniciado',
+                        2 => 'Finalizado',
+                        default => 'Desconocido'
+                    })
             ])
             ->filters([
                 //
@@ -128,7 +136,7 @@ class PromocionResource extends Resource
                     })
                     ->iconButton()
                     ->color('info')
-                    
+
                     ->tooltip('Editar promoción'),
                 Tables\Actions\Action::make('asignarCervezas')
                 ->visible(function () {
@@ -138,14 +146,12 @@ class PromocionResource extends Resource
                 ->tooltip('Asignar cervezas a la promoción')
                 ->color('success')
                 ->icon('heroicon-o-plus')
-                
                 ->modalHeading('Asignar Cervezas')
                 ->modalSubheading(fn ($record) => $record->nombre)
                 ->modalSubmitAction(function ($record, $data) {
 
                 })
                 ->modalSubmitActionLabel('Guardar') // Cambiar el nombre del botón de submit
-
                 ->modalCancelActionLabel('Cerrar')
                 ->form([
                     Select::make('cervezas') // Esto es el campo que tendrá las cervezas seleccionadas
@@ -158,7 +164,25 @@ class PromocionResource extends Resource
                         ->required(), // Opcional: Si quieres que el campo sea obligatorio
                 ])
                 ->action(function ($record, array $data) {
+
                     $record->cervezas()->sync($data['cervezas']);
+                            activity()
+                    ->performedOn($record)
+                    ->causedBy(auth()->user())
+                    ->tap(function (\Spatie\Activitylog\Models\Activity $activity){
+                        // Aquí personalizamos el log_name y el event
+                        $activity->log_name = 'promociones_productos';  // El nombre de tu log, puedes ponerlo como desees
+                        $activity->event = 'created';   // Lo que quieres registrar, en este caso 'updated'
+                    })
+                    ->withProperties([
+                        'name' => $record->nombre,
+                        'cerveza_id' => $data['cervezas'],
+                    ])
+                    ->log('Cervezas creados en la promoción');
+                    Notification::make()
+                        ->title('Cervezas asignadas')
+                        ->success()
+                        ->send();
                 }),
                 Tables\Actions\Action::make('finalizar')
                     ->iconButton()
@@ -167,16 +191,55 @@ class PromocionResource extends Resource
                     ->color('warning')
                     ->visible(function(){
                         return auth()->user()->can('promocion_finalizar');
+                    })
+                    ->modalHeading('Finalizar promoción')
+                    ->modalDescription('Esta acción no se puede deshacer.')
+                    ->requiresConfirmation()
+                    ->action(function (Promocion $record) {
+                        $record->update(['estado' => 2]);
+                        Notification::make()
+                            ->title('Promoción finalizada')
+                            ->success()
+                            ->send();
+
                     }),
-                Tables\Actions\Action::make('desactivar')
+                Tables\Actions\Action::make('eliminar')
                     ->visible(function () {
                         return auth()->user()->can('promocion_eliminar');
                     })
-                    ->tooltip('Desactivar promoción')
+                    ->tooltip('Eliminar promoción')
                     ->iconButton()
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    
+                    ->modalHeading('Eliminar promoción')
+                    ->modalDescription('Esta acción no se puede deshacer.')
+                    ->requiresConfirmation()
+                    ->action(function (Promocion $record) {
+
+                        $appliedPromotionDetailTotal = DetallePromocionAplicada::whereHas('venta', function ($query) {
+                                $query->where('estado', 1);
+                            })
+                            ->where('estado', 1)
+                            ->where('promocion_id', $record->id)
+                            ->count();
+
+                        if ($appliedPromotionDetailTotal > 0) {
+                            Notification::make()
+                                ->title('No se puede eliminar')
+                                ->body('Esta promoción tiene detalles aplicados a ventas activas.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $record->update(['estado' => 0]);
+
+                        Notification::make()
+                            ->title('Promoción eliminada')
+                            ->success()
+                            ->send();
+                    }),
+
 
             ])
             ->bulkActions([

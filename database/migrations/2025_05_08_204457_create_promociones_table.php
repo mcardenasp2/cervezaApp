@@ -22,7 +22,7 @@ return new class extends Migration
             $table->dateTime('fecha_inicio');
             $table->dateTime('fecha_fin');
             $table->text('descripcion');
-            $table->integer('estado')->default(1);
+            $table->integer('estado')->default(1)->comment('1: Activo, 0: Inactivo, 2: Finalizado');;
             $table->timestamps();
         });
     }
