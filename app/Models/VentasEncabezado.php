@@ -31,6 +31,8 @@ class VentasEncabezado extends Model
         'transacciones_ids',
         'asignacion_pulsera_id',
         'cliente_id',
+        'descuento',
+        'total_pagar',
         'estado'
     ];
 
