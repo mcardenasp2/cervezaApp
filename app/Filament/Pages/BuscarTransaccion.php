@@ -158,11 +158,21 @@ class BuscarTransaccion extends Page
         $this->formSale->descuento = round(collect($this->formSale->detalle_promocion_aplicada)->sum('total_descuento'), 2) ;
         $this->formSale->total_pagar = $this->formSale->total - $this->formSale->descuento ;
         $this->formSale->ventas_detalles = $this->formSale->ventas_detalles->map(function($transaccion) {
+            return [
+                'id' => $transaccion->id,
+                'nombre_cerveza' => $transaccion->cerveza->nombre,
+                'cerveza_id' => $transaccion->cerveza_id,
+                'mililitros_consumidos' => $transaccion->mililitros_consumidos,
+                'precio_por_mililitro' => $transaccion->precio_por_mililitro,
+                'total' => $transaccion->total,
+                'aplica_promocion' => $transaccion->aplica_promocion,
+                'producto_promocionado' => $transaccion->producto_promocionado,
+                'promocion_id' => $transaccion->promocion_id
+            ];
             return $transaccion;
-        });
-        // dd($this->formSale->ventas_detalles);
+        })->toArray();
 
-        if ($this->formSale->ventas_detalles->count() === 0) {
+        if (collect($this->formSale->ventas_detalles)->count() === 0) {
             Notification::make()
                 ->title('No existen transacciones de esta pulsera.')
                 ->info()
@@ -252,7 +262,8 @@ class BuscarTransaccion extends Page
     public function saveSale()
     {
         $this->showModal = false;
-        if ($this->formSale->ventas_detalles->isEmpty()) {
+        $this->formSale->ventas_detalles = collect($this->formSale->ventas_detalles) ;
+        if ($this->formSale->ventas_detalles->count() === 0) {
 
             $this->notification = [
                 'message' => 'No existen registros para guardar',
@@ -286,13 +297,13 @@ class BuscarTransaccion extends Page
             foreach ($this->formSale->ventas_detalles as $key => $value) {
                 VentasDetalle::create([
                     'cabecera_id' => $salesHeader->id,
-                    'cerveza_id' => $value->cerveza_id,
-                    'mililitros_consumidos' => $value->mililitros_consumidos,
-                    'precio_por_mililitro' => $value->precio_por_mililitro,
-                    'total' => $value->total,
-                    'aplica_promocion' => $value->aplica_promocion,
-                    'producto_promocionado' => $value->producto_promocionado,
-                    'promocion_id' => $value->promocion_id
+                    'cerveza_id' => $value['cerveza_id'],
+                    'mililitros_consumidos' => $value['mililitros_consumidos'],
+                    'precio_por_mililitro' => $value['precio_por_mililitro'],
+                    'total' => $value['total'],
+                    'aplica_promocion' => $value['aplica_promocion'],
+                    'producto_promocionado' => $value['producto_promocionado'],
+                    'promocion_id' => $value['promocion_id']
                 ]);
             }
 

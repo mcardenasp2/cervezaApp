@@ -58,4 +58,9 @@ class VentasEncabezado extends Model
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
+
+    public function detallesPromociones()
+    {
+        return $this->hasMany(DetallePromocionAplicada::class, 'venta_id')->where('estado', 1);
+    }
 }

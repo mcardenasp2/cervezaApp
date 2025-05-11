@@ -244,7 +244,7 @@
     <div wire:loading.remove>
 
 
-        @if($formSale->ventas_detalles)
+        @if(collect($formSale->ventas_detalles)->count() > 0)
 
         <div class="relative max-h-[350px] overflow-y-auto border border-gray-300 rounded shadow">
 
@@ -262,8 +262,11 @@
                         </thead>
                         <tbody>
                             @foreach($formSale->ventas_detalles as $transaccion)
+                            @php
+                                $transaccion = (object)$transaccion;
+                            @endphp
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->cerveza->nombre }}</td>
+                                    <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700">{{ $transaccion->nombre_cerveza }}</td>
                                     <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700 text-right">{{ $transaccion->mililitros_consumidos }}</td>
                                     <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700 text-right">{{ $transaccion->precio_por_mililitro }}</td>
                                     <td class="px-6 py-4 border-b border-gray-200 text-sm text-gray-700 text-right">${{ $transaccion->total }}</td>
