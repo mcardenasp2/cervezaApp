@@ -216,8 +216,13 @@
                         <x-filament::button color="gray" @click="showModal = false">
                             Cancelar
                         </x-filament::button>
-                        <x-filament::button color="success" wire:click="saveSale">
-                            Confirmar
+                        <x-filament::button
+                        color="success"
+                        wire:click="saveSale"
+                        wire:loading.attr="disabled"
+                        wire:target="saveSale">
+                            <span wire:loading.remove wire:target="saveSale">Confirmar</span>
+                            <span wire:loading wire:target="saveSale">Procesando...</span>
                         </x-filament::button>
                     </div>
                 </div>
