@@ -15,14 +15,14 @@ class ListPromocions extends ListRecords
         return [
             Actions\CreateAction::make()
                 ->visible(function () {
-                    return auth()->user()->can('promocion_crear');
+                    return auth()->user()->can('promocion-crear');
                 }),
         ];
     }
 
     public function mount(): void
     {
-        if(!auth()->user()->can('promocion_listar')) {
+        if(!auth()->user()->can('promocion-listar')) {
             abort(403); // Acceso denegado si no tiene el permiso
         }
     }

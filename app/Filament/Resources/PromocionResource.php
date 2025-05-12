@@ -42,7 +42,7 @@ class PromocionResource extends Resource
     {
         $navigationItems = parent::getNavigationItems();
 
-        if (auth()->user()->can('promocion_listar')) {
+        if (auth()->user()->can('promocion-listar')) {
             return $navigationItems;  // Si tiene el permiso, muestra el recurso
         }
 
@@ -142,7 +142,7 @@ class PromocionResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->visible(function () {
-                        return auth()->user()->can('promocion_editar');
+                        return auth()->user()->can('promocion-editar');
                     })
                     ->iconButton()
                     ->color('info')
@@ -150,7 +150,7 @@ class PromocionResource extends Resource
                     ->tooltip('Editar promoción'),
                 Tables\Actions\Action::make('asignarCervezas')
                 ->visible(function () {
-                    return auth()->user()->can('promocion_crear_detalle');
+                    return auth()->user()->can('promocion-crear-detalle');
                 })
                 ->iconButton()
                 ->tooltip('Asignar cervezas a la promoción')
@@ -198,7 +198,7 @@ class PromocionResource extends Resource
                     ->icon('heroicon-o-check')
                     ->color('warning')
                     ->visible(function(){
-                        return auth()->user()->can('promocion_finalizar');
+                        return auth()->user()->can('promocion-finalizar');
                     })
                     ->modalHeading('Finalizar promoción')
                     ->modalDescription('Esta acción no se puede deshacer.')
@@ -213,7 +213,7 @@ class PromocionResource extends Resource
                     }),
                 Tables\Actions\Action::make('eliminar')
                     ->visible(function () {
-                        return auth()->user()->can('promocion_eliminar');
+                        return auth()->user()->can('promocion-eliminar');
                     })
                     ->tooltip('Eliminar promoción')
                     ->iconButton()

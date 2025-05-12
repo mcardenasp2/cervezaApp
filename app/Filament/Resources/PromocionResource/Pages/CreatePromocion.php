@@ -17,7 +17,7 @@ class CreatePromocion extends CreateRecord
 
     public function mount(): void
     {
-        if (!auth()->user()->can('promocion_crear')) {
+        if (!auth()->user()->can('promocion-crear')) {
             abort(403); // Acceso denegado si no tiene el permiso
         }
     }

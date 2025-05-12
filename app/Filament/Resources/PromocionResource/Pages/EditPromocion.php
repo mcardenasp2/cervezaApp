@@ -19,7 +19,7 @@ class EditPromocion extends EditRecord
 
     public function mount($record): void
     {
-        if (!auth()->user()->can('promocion_editar')) {
+        if (!auth()->user()->can('promocion-editar')) {
             abort(403); // Acceso denegado si no tiene el permiso
         }
 
@@ -32,6 +32,7 @@ class EditPromocion extends EditRecord
 
     protected function getFormActions(): array
     {
+
         if($this->record->estado != 1){
             return [];
         }
