@@ -23,11 +23,10 @@ use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Actions\Modal\Action as ModalAction;
-
-
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder; // ✅ Correcto
 
 class PromocionResource extends Resource
 {
@@ -137,7 +136,8 @@ class PromocionResource extends Resource
                     })
             ])
             ->filters([
-                //
+                Filter::make('estado')
+                ->query(fn (Builder $query) => $query->where('estado', '!=', 0))
             ])
             ->actions([
                 Tables\Actions\EditAction::make()

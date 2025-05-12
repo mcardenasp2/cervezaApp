@@ -152,8 +152,6 @@ class BuscarTransaccion extends Page
 
 
 
-
-
         $this->formSale->total = round($this->formSale->ventas_detalles->sum('total'), 2) ;
         $this->formSale->descuento = round(collect($this->formSale->detalle_promocion_aplicada)->sum('total_descuento'), 2) ;
         $this->formSale->total_pagar = $this->formSale->total - $this->formSale->descuento ;
@@ -188,7 +186,8 @@ class BuscarTransaccion extends Page
 
     public function checkPromotions() : void
     {
-        $newPromotions = collect($this->promotions)->flatMap(function ($promotionsItem) {
+        $newPromotions = collect($this->promotions)->sortByDesc('cantidad')
+        ->flatMap(function ($promotionsItem) {
             $promotionsItem = (object) $promotionsItem;
 
             return $promotionsItem->cervezas->map(function ($cerveza) use ($promotionsItem) {
@@ -223,11 +222,19 @@ class BuscarTransaccion extends Page
 
             $beerPromotionsGroup = (object) $beerPromotionsGroup;
             $groupQuantity = $beerPromotionsGroup->detalle_promocion->count() ;
-            $groupQuantity = (int) ($groupQuantity / $beerPromotionsGroup->promocion->cantidad) ;
+            // Obtengo la cantidad de grupos de productos que se pueden aplicar la promocion
+            $groupQuantity = $beerPromotionsGroup->promocion->cantidad > 0
+                            ? (int) ($groupQuantity / $beerPromotionsGroup->promocion->cantidad)
+                            : 0;
+            // Obtengo la cantidad de productos que se pueden aplicar la promocion
             $totalProductDiscount = $beerPromotionsGroup->promocion->cantidad - $beerPromotionsGroup->promocion->pagar ;
+            //Obtengo el total de productos que se pueden aplicar la promocion
             $totalDiscountedproducts = $groupQuantity * $totalProductDiscount ;
+            // Cantidad de productos que se evaluaron para promocion
             $totalPromotionalProducts = $beerPromotionsGroup->promocion->cantidad * $groupQuantity ;
+            // Ids de lod productos a descontar
             $idsProductDiscount = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->pluck('id') ;
+            // ids de los productos a evaluar para promocion
             $idsProductsPromotion = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->pluck('id') ;
 
             $this->formSale->ventas_detalles = $this->formSale->ventas_detalles->map(function($transaccion) use ($idsProductDiscount, $idsProductsPromotion, $promotionsItem) {
@@ -243,15 +250,19 @@ class BuscarTransaccion extends Page
                 return $transaccion;
             });
 
-            $this->formSale->detalle_promocion_aplicada[] = [
-                'promocion_id' => $promotionsItem->id,
-                'cerveza_id' => $promotionsItem->cerveza_id,
-                'cantidad_mililitros' => round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->sum('mililitros_consumidos') , 2),
-                'cantidad_items_aplicados' => $totalPromotionalProducts,
-                'cantidad_gratis' => $totalDiscountedproducts,
-                'total_descuento' => round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->sum('total') , 2),
-                'descripcion_snapshot' => $promotionsItem->nombre.' - '.$promotionsItem->cerveza_nombre
-            ] ;
+            $totalDiscount = round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->sum('total') , 2);
+
+            if ($totalDiscount > 0) {
+                $this->formSale->detalle_promocion_aplicada[] = [
+                    'promocion_id' => $promotionsItem->id,
+                    'cerveza_id' => $promotionsItem->cerveza_id,
+                    'cantidad_mililitros' => round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->sum('mililitros_consumidos') , 2),
+                    'cantidad_items_aplicados' => $totalPromotionalProducts,
+                    'cantidad_gratis' => $totalDiscountedproducts,
+                    'total_descuento' => $totalDiscount,
+                    'descripcion_snapshot' => $promotionsItem->nombre.' - '.$promotionsItem->cerveza_nombre
+                ] ;
+            }
         }
 
     }
@@ -264,11 +275,11 @@ class BuscarTransaccion extends Page
         $this->showModal = false;
         $this->formSale->ventas_detalles = collect($this->formSale->ventas_detalles) ;
         if ($this->formSale->ventas_detalles->count() === 0) {
+            Notification::make()
+                ->title('No existen transacciones para pagar.')
+                ->danger()
+                ->send();
 
-            $this->notification = [
-                'message' => 'No existen registros para guardar',
-                'color' => 'error', // Colores de Filament: success, danger, warning, info
-            ];
 
             session()->flash('error', 'No hay transacciones para pagar.');
             return;
@@ -362,6 +373,8 @@ class BuscarTransaccion extends Page
 
     public function mount(): void
     {
+        $this->promotions = $this->getActivePromotions();
+
         if (!auth()->user()->can('venta-crear')) {
             abort(403); // Acceso denegado si no tiene el permiso
         }
