@@ -46,7 +46,6 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Cerveza</th>
                 <th>Mililitros Consumidos</th>
                 <th>Precio por Mililitro</th>
@@ -56,16 +55,23 @@
         <tbody>
             @foreach ($record->detalles as $detalle)
                 <tr>
-                    <td>{{ $detalle->id }}</td>
                     <td>{{ $detalle->cerveza->nombre }}</td>
                     <td class="text-right">{{ $detalle->mililitros_consumidos }}</td>
                     <td class="text-right">{{ $detalle->precio_por_mililitro }}</td>
-                    <td class="text-right">{{ $detalle->total }}</td>
+                    <td class="text-right">${{ number_format($detalle->total, 2) }}</td>
+                </tr>
+            @endforeach
+
+
+            @foreach ($record->detallesPromociones as $detalle)
+                <tr>
+                    <td colspan="3" class="text-center">{{ $detalle->descripcion_snapshot }}</td>
+                    <td class="text-right" style="color: red">-${{ number_format($detalle->total_descuento, 2) }}</td>
                 </tr>
             @endforeach
             <tr>
-                <td colspan="4" class="text-center"><strong> Total Pagar</strong> </td>
-                <td class="text-right">{{$record->total}}</td>
+                <td colspan="3" class="text-center"><strong> Total Pagar</strong> </td>
+                <td class="text-right">${{number_format($record->total_pagar, 2)}}</td>
             </tr>
         </tbody>
     </table>

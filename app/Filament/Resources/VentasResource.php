@@ -143,6 +143,24 @@ class VentasResource extends Resource
                 )
                 ->sortable()
                 ->searchable(),
+            TextColumn::make('descuento')
+                ->label('Descuento')
+                ->numeric(
+                    decimalPlaces: 2,
+                    decimalSeparator: '.',
+                    thousandsSeparator: ',',
+                )
+                ->sortable()
+                ->searchable(),
+            TextColumn::make('total_pagar')
+                ->label('Total a Pagar')
+                ->numeric(
+                    decimalPlaces: 2,
+                    decimalSeparator: '.',
+                    thousandsSeparator: ',',
+                )
+                ->sortable()
+                ->searchable(),
             BadgeColumn::make('estado')
             ->label('Estado')
             ->colors([

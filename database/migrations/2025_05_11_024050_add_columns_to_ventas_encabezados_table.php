@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cervezas', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre');
-            $table->decimal('precio_por_mililitro', 8, 4);
-            $table->integer('estado')->default(1);
-            $table->timestamps();
+        Schema::table('ventas_encabezados', function (Blueprint $table) {
+            $table->float('descuento');
+            $table->float('total_pagar');
         });
     }
 
@@ -25,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cervezas');
+        Schema::table('ventas_encabezados', function (Blueprint $table) {
+            $table->dropColumn(['descuento', 'total_pagar']);
+        });
     }
 };

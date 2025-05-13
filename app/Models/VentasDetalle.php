@@ -30,6 +30,9 @@ class VentasDetalle extends Model
         'mililitros_consumidos',
         'precio_por_mililitro',
         'total',
+        'aplica_promocion',
+        'producto_promocionado',
+        'promocion_id',
         'estado'
     ];
 

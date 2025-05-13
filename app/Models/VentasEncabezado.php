@@ -31,6 +31,8 @@ class VentasEncabezado extends Model
         'transacciones_ids',
         'asignacion_pulsera_id',
         'cliente_id',
+        'descuento',
+        'total_pagar',
         'estado'
     ];
 
@@ -55,5 +57,10 @@ class VentasEncabezado extends Model
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
+
+    public function detallesPromociones()
+    {
+        return $this->hasMany(DetallePromocionAplicada::class, 'venta_id')->where('estado', 1);
     }
 }
