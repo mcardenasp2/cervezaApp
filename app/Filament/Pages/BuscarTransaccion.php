@@ -207,11 +207,28 @@ class BuscarTransaccion extends Page
             });
         });
 
+        $newPromotions = collect($this->promotions)->map(function ($promotionsItem) {
+            return [
+                'id' => $promotionsItem['id'],
+                'nombre' => $promotionsItem['nombre'],
+                'cerveza_id' => $promotionsItem['cervezas']->pluck('id')->toArray(),
+                'cerveza_nombre' => $promotionsItem['cervezas']->pluck('nombre')->toArray(),
+                'fecha_inicio' => $promotionsItem['fecha_inicio'],
+                'fecha_fin' => $promotionsItem['fecha_fin'],
+                'tipo' => $promotionsItem['tipo'],
+                'cantidad' => $promotionsItem['cantidad'],
+                'pagar' => $promotionsItem['pagar'],
+                'desde_mililitros' => $promotionsItem['desde_mililitros'],
+                'hasta_mililitros' => $promotionsItem['hasta_mililitros'],
+            ];
+        })
+        ->sortByDesc('cantidad');
+
         $beerPromotionsGroup = [] ;
         foreach ($newPromotions as $key => $promotionsItem) {
             $promotionsItem = (object) $promotionsItem;
 
-            $details = $this->formSale->ventas_detalles->where('cerveza_id', $promotionsItem->cerveza_id)
+            $details = $this->formSale->ventas_detalles->whereIn('cerveza_id', $promotionsItem->cerveza_id)
                 ->where('aplica_promocion', false)
                 ->whereBetween('mililitros_consumidos', [$promotionsItem->desde_mililitros, $promotionsItem->hasta_mililitros]);
 
@@ -260,7 +277,9 @@ class BuscarTransaccion extends Page
                     'cantidad_items_aplicados' => $totalPromotionalProducts,
                     'cantidad_gratis' => $totalDiscountedproducts,
                     'total_descuento' => $totalDiscount,
-                    'descripcion_snapshot' => $promotionsItem->nombre.' - '.$promotionsItem->cerveza_nombre
+                    // crear campo
+                    // $groupQuantity
+                    'descripcion_snapshot' => $groupQuantity.' - '.$promotionsItem->nombre.' ('.implode(', ', $promotionsItem->cerveza_nombre).')'
                 ] ;
             }
         }
