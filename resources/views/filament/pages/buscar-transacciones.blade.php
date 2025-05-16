@@ -45,7 +45,7 @@
             <table class="w-full divide-y divide-gray-200 bg-white rounded shadow">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th colspan="5" class="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+                        <th colspan="6" class="px-4 py-2 text-center text-sm font-semibold text-gray-700">
                             Promociones Activas
                         </th>
                     </tr>
@@ -54,6 +54,7 @@
                         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Cervezas</th>
                         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Inicio</th>
                         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Fin</th>
+                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Días / Horarios</th>
                         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Estado</th>
                     </tr>
                 </thead>
@@ -69,10 +70,19 @@
                                 @endforeach
                             </td>
                             <td class="px-4 py-2 text-sm text-gray-800">
-                                {{ \Carbon\Carbon::parse($promo['fecha_inicio'])->format('d/m/Y H:i:s') }}
+                                {{ \Carbon\Carbon::parse($promo['fecha_inicio'])->format('d/m/Y') }}
                             </td>
                             <td class="px-4 py-2 text-sm text-gray-800">
-                                {{ \Carbon\Carbon::parse($promo['fecha_fin'])->format('d/m/Y H:i:s') }}
+                                {{ \Carbon\Carbon::parse($promo['fecha_fin'])->format('d/m/Y') }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-gray-800">
+                                @foreach ($promo['dias'] as $dia)
+                                    <div class="mb-1">
+                                        <span class="font-semibold capitalize">{{ $dia['dia'] }}:</span>
+                                        <span>{{ \Carbon\Carbon::parse($dia['hora_inicio'])->format('H:i') }} -
+                                            {{ \Carbon\Carbon::parse($dia['hora_fin'])->format('H:i') }}</span>
+                                    </div>
+                                @endforeach
                             </td>
                             <td class="px-4 py-2 text-sm">
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">

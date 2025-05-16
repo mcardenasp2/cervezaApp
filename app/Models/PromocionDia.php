@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Promocion extends Model
+class PromocionDia extends Model
 {
     use HasFactory;
 
@@ -17,34 +17,24 @@ class Promocion extends Model
     {
         return LogOptions::defaults()
             ->logAll() // <-- todas las columnas
-            ->useLogName('promociones')
+            ->useLogName('promocion_dias')
             ->logOnlyDirty() // solo si cambió algo
             ->dontSubmitEmptyLogs(); // no guardar si no hay cambios
     }
 
-    protected $table = 'promociones';
+    protected $table = 'promocion_dias' ;
+
 
     protected $fillable = [
-        'nombre',
-        'tipo',
-        'cantidad',
-        'pagar',
-        'desde_mililitros',
-        'hasta_mililitros',
-        'fecha_inicio',
-        'fecha_fin',
-        'descripcion',
-        'estado'
+        'promocion_id' ,
+        'dia',
+        'hora_inicio',
+        'hora_fin'
     ];
 
-
-    public function cervezas()
+    public function promocion()
     {
-        return $this->belongsToMany(Cerveza::class, 'promociones_productos')->withTimestamps();
+        return $this->belongsTo(Promocion::class);
     }
 
-    public function dias()
-    {
-        return $this->hasMany(PromocionDia::class);
-    }
 }

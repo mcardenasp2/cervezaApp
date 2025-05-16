@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\PromocionDiaRelationManagerResource\RelationManagers\DiasRelationManager;
 use App\Filament\Resources\PromocionResource\Pages;
 use App\Filament\Resources\PromocionResource\RelationManagers;
 use App\Models\Cerveza;
@@ -25,6 +26,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Actions\Modal\Action as ModalAction;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TimePicker;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder; // ✅ Correcto
 
@@ -58,6 +61,7 @@ class PromocionResource extends Resource
                     ->required()
                     ->maxLength(255),
                 TextInput::make('tipo')
+                    ->default('DESCUENTO')
                     ->label('Tipo')
                     ->required()
                     ->maxLength(255),
@@ -81,12 +85,10 @@ class PromocionResource extends Resource
                     ->label('Hasta Mililítros')
                     ->required()
                     ->maxLength(255),
-                DateTimePicker::make('fecha_inicio')
-                    ->label('Fecha Inicio')
-                    ->format('Y-m-d H:i:s')
-                    ->required(),
-                DateTimePicker::make('fecha_fin')
-                    ->format('Y-m-d H:i:s')
+                DatePicker::make('fecha_inicio')
+                ->label('Fecha Inicio')
+                ->required(),
+                DatePicker::make('fecha_fin')
                     ->label('Fecha Fin')
                     ->required(),
                 Textarea::make('descripcion')
@@ -192,6 +194,86 @@ class PromocionResource extends Resource
                         ->success()
                         ->send();
                 }),
+                Tables\Actions\Action::make('asignarDias')
+                    // ->visible(fn () => auth()->user()->can('promocion-crear-dias'))
+                    ->iconButton()
+                    ->tooltip('Asignar días y horarios')
+                    ->color('primary')
+                    ->icon('heroicon-o-calendar')
+                    ->modalHeading('Asignar Días y Horarios')
+                    ->modalSubheading(fn ($record) => $record->nombre)
+                    ->modalSubmitActionLabel('Guardar')
+                    ->modalCancelActionLabel('Cerrar')
+                    ->form([
+                        Repeater::make('dias')
+                        ->default(function ($record) {
+                            return $record->dias->map(function ($dia) {
+                                return [
+                                    'dia' => $dia->dia,
+                                    'hora_inicio' => $dia->hora_inicio,
+                                    'hora_fin' => $dia->hora_fin,
+                                ];
+                            })->toArray();
+                        })
+                        ->schema([
+                            Select::make('dia')
+                                ->label('Día')
+                                ->options([
+                                    'lunes' => 'Lunes',
+                                    'martes' => 'Martes',
+                                    'miércoles' => 'Miércoles',
+                                    'jueves' => 'Jueves',
+                                    'viernes' => 'Viernes',
+                                    'sábado' => 'Sábado',
+                                    'domingo' => 'Domingo',
+                                ])
+                                ->required(),
+                            TimePicker::make('hora_inicio')->label('Desde')->required(),
+                            TimePicker::make('hora_fin')->label('Hasta')->required(),
+                        ])
+                        ->rules([
+                            function ($get) {
+                                return function (string $attribute, $value, \Closure $fail) {
+                                    if (!is_array($value)) return;
+
+                                    $dias = array_column($value, 'dia');
+                                    $repetidos = array_keys(array_filter(array_count_values($dias), fn ($count) => $count > 1));
+
+                                    if (!empty($repetidos)) {
+                                        $fail('No puedes seleccionar días repetidos: ' . implode(', ', $repetidos));
+                                    }
+                                };
+                            },
+                        ])
+                        ->afterStateHydrated(function ($component, $state) {
+                                // Para prevenir que un día ya usado se seleccione otra vez
+                                $component->state($state);
+                            })
+                        ->columns(3)
+                        ->minItems(1)
+                        ->maxItems(7)
+                        ->createItemButtonLabel('Agregar Día')
+                        ->label('Días y horarios de promoción'),
+
+                    ])
+
+                    ->action(function ($record, array $data) {
+                        $diasData = collect($data['dias'])->map(function ($dia) {
+                            return [
+                                'dia' => $dia['dia'],
+                                'hora_inicio' => $dia['hora_inicio'],
+                                'hora_fin' => $dia['hora_fin'],
+                            ];
+                        });
+
+                        $record->dias()->delete();
+                        $record->dias()->createMany($diasData->toArray());
+
+                        Notification::make()
+                            ->title('Días y horarios asignados')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\Action::make('finalizar')
                     ->iconButton()
                     ->tooltip('Finalizar promoción')
@@ -257,7 +339,7 @@ class PromocionResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
+         return [
             //
         ];
     }
