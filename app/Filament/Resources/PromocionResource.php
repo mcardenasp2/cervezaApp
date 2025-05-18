@@ -26,10 +26,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Actions\Modal\Action as ModalAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TimePicker;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder; // ✅ Correcto
+use Illuminate\Support\Facades\DB;
 
 class PromocionResource extends Resource
 {
@@ -205,19 +209,18 @@ class PromocionResource extends Resource
                     ->modalSubmitActionLabel('Guardar')
                     ->modalCancelActionLabel('Cerrar')
                     ->form([
-                        Repeater::make('dias')
-                        ->default(function ($record) {
-                            return $record->dias->map(function ($dia) {
-                                return [
-                                    'dia' => $dia->dia,
-                                    'hora_inicio' => $dia->hora_inicio,
-                                    'hora_fin' => $dia->hora_fin,
-                                ];
-                            })->toArray();
-                        })
-                        ->schema([
-                            Select::make('dia')
-                                ->label('Día')
+                        Grid::make(1)->schema([
+                            Grid::make(2)->schema([
+                                TimePicker::make('hora_inicio')
+                                    ->label('Desde')
+                                    ->required(),
+
+                                TimePicker::make('hora_fin')
+                                    ->label('Hasta')
+                                    ->required(),
+                            ]),
+                            CheckboxList::make('dias_seleccionados')
+                                ->label('Selecciona los días')
                                 ->options([
                                     'lunes' => 'Lunes',
                                     'martes' => 'Martes',
@@ -227,52 +230,54 @@ class PromocionResource extends Resource
                                     'sábado' => 'Sábado',
                                     'domingo' => 'Domingo',
                                 ])
-                                ->required(),
-                            TimePicker::make('hora_inicio')->label('Desde')->required(),
-                            TimePicker::make('hora_fin')->label('Hasta')->required(),
-                        ])
-                        ->rules([
-                            function ($get) {
-                                return function (string $attribute, $value, \Closure $fail) {
-                                    if (!is_array($value)) return;
-
-                                    $dias = array_column($value, 'dia');
-                                    $repetidos = array_keys(array_filter(array_count_values($dias), fn ($count) => $count > 1));
-
-                                    if (!empty($repetidos)) {
-                                        $fail('No puedes seleccionar días repetidos: ' . implode(', ', $repetidos));
-                                    }
-                                };
-                            },
-                        ])
-                        ->afterStateHydrated(function ($component, $state) {
-                                // Para prevenir que un día ya usado se seleccione otra vez
-                                $component->state($state);
-                            })
-                        ->columns(3)
-                        ->minItems(1)
-                        ->maxItems(7)
-                        ->createItemButtonLabel('Agregar Día')
-                        ->label('Días y horarios de promoción'),
+                                ->columns(2)
+                                ->required(), // importante para que actualice los campos condicionales
+                        ]),
 
                     ])
+                    ->mountUsing(function ($record, $form) {
 
+                        $dias = $record->dias;
+
+                        $form->fill([
+                            'dias_seleccionados' => $dias->pluck('dia')->toArray(),
+                            'hora_inicio' => optional($dias->first())->hora_inicio,
+                            'hora_fin' => optional($dias->first())->hora_fin,
+                        ]);
+
+
+                    })
                     ->action(function ($record, array $data) {
-                        $diasData = collect($data['dias'])->map(function ($dia) {
+                        $diasData = collect($data['dias_seleccionados'])->map(function ($dia) use ($data) {
                             return [
-                                'dia' => $dia['dia'],
-                                'hora_inicio' => $dia['hora_inicio'],
-                                'hora_fin' => $dia['hora_fin'],
+                                'dia' => $dia,
+                                'hora_inicio' => $data['hora_inicio'],
+                                'hora_fin' => $data['hora_fin'],
                             ];
                         });
 
-                        $record->dias()->delete();
-                        $record->dias()->createMany($diasData->toArray());
+                        try {
+                            DB::beginTransaction();
 
-                        Notification::make()
+                            $record->dias()->delete();
+                            $record->dias()->createMany($diasData->toArray());
+
+                            Notification::make()
                             ->title('Días y horarios asignados')
                             ->success()
                             ->send();
+
+                            DB::commit() ;
+
+                        } catch (\Throwable $th) {
+                            DB::rollBack() ;
+
+                            Notification::make()
+                            ->title('Error')
+                            ->body($th->getMessage())
+                            ->danger()
+                            ->send();
+                        }
                     }),
                 Tables\Actions\Action::make('finalizar')
                     ->iconButton()

@@ -12,6 +12,7 @@ use App\Models\VentasDetalle;
 use App\Models\VentasEncabezado;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use DateTime;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Actions\ButtonAction;
@@ -19,6 +20,7 @@ use Filament\Pages\Actions\Modal\Actions\ButtonAction as ActionsButtonAction;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 class BuscarTransaccion extends Page
@@ -209,12 +211,16 @@ class BuscarTransaccion extends Page
         })
         ->sortByDesc('cantidad');
 
-
-
-
-
         $beerPromotionsGroup = [] ;
+
+        $startDate = new DateTime(date('Y-m-d'));
+        $startDate = $startDate->modify('-2 day');
+        $startDate = $startDate->format('Y-m-d');
+
+
         foreach ($newPromotions as $key => $promotionsItem) {
+            $promotionsItem['fecha_inicio'] = $startDate;
+            $promotionsItem['fecha_fin'] = date('Y-m-d') ;
             $promotionalDates = $this->generatePromotionalDates($promotionsItem) ;
 
             foreach ($promotionalDates as $key2 => $value) {
@@ -325,7 +331,6 @@ class BuscarTransaccion extends Page
         }
 
         return $fechasPromocion ;
-
     }
 
 
