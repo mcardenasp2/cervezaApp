@@ -33,6 +33,7 @@ class VentasDetalle extends Model
         'aplica_promocion',
         'producto_promocionado',
         'promocion_id',
+        'fecha_transaccion',
         'estado'
     ];
 

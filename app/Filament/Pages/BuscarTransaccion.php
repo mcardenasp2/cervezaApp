@@ -157,8 +157,6 @@ class BuscarTransaccion extends Page
             });
         $this->checkPromotions();
 
-
-
         $this->formSale->total = round($this->formSale->ventas_detalles->sum('total'), 2) ;
         $this->formSale->descuento = round(collect($this->formSale->detalle_promocion_aplicada)->sum('total_descuento'), 2) ;
         $this->formSale->total_pagar = $this->formSale->total - $this->formSale->descuento ;
@@ -172,7 +170,8 @@ class BuscarTransaccion extends Page
                 'total' => $transaccion->total,
                 'aplica_promocion' => $transaccion->aplica_promocion,
                 'producto_promocionado' => $transaccion->producto_promocionado,
-                'promocion_id' => $transaccion->promocion_id
+                'promocion_id' => $transaccion->promocion_id,
+                'created_at' => $transaccion->created_at
             ];
             return $transaccion;
         })->toArray();
@@ -384,7 +383,8 @@ class BuscarTransaccion extends Page
                     'total' => $value['total'],
                     'aplica_promocion' => $value['aplica_promocion'],
                     'producto_promocionado' => $value['producto_promocionado'],
-                    'promocion_id' => $value['promocion_id']
+                    'promocion_id' => $value['promocion_id'],
+                    'fecha_transaccion' => $value['created_at']
                 ]);
             }
 
