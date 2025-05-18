@@ -117,27 +117,31 @@ class PromocionResource extends Resource
                 TextColumn::make('fecha_fin')
                     ->label('Fecha Hasta')
                     ->date('Y-m-d'),
-                TextColumn::make('rango_mililitros')
-                    ->label('Rango Mililitros')
-                    ->getStateUsing(function ($record) {
-                        return $record->desde_mililitros . ' - ' . $record->hasta_mililitros;
-                    }),
+
 
                 TextColumn::make('cervezas.nombre')
                     ->label('Cervezas')
                     ->badge()
                     ->toggleable()
                     ->separator(', '),
-                TextColumn::make('horario')
-                    ->label('Horario')
-                    ->getStateUsing(function ($record) {
-                        return $record->horario_dias;
-                    }),
+
                 TextColumn::make('dias_label')
                     ->label('Días')
                     ->badge()
                     ->toggleable()
                      ->separator(', '),
+
+                TextColumn::make('horario')
+                    ->label('Horario')
+                    ->getStateUsing(function ($record) {
+                        return $record->horario_dias;
+                    }),
+
+                TextColumn::make('rango_mililitros')
+                    ->label('Rango Mililitros')
+                    ->getStateUsing(function ($record) {
+                        return $record->desde_mililitros . ' - ' . $record->hasta_mililitros;
+                    }),
 
                 BadgeColumn::make('estado')
                     ->label('Estado')
@@ -211,11 +215,12 @@ class PromocionResource extends Resource
                         ->send();
                 }),
                 Tables\Actions\Action::make('asignarDias')
-                    // ->visible(fn () => auth()->user()->can('promocion-crear-dias'))
+                    ->visible(fn () => auth()->user()->can('promocion-crear-dias'))
                     ->iconButton()
                     ->tooltip('Asignar días y horarios')
                     ->color('primary')
                     ->icon('heroicon-o-calendar')
+                    ->disabled(fn ($record) => $record->estado !== 1)
                     ->modalHeading('Asignar Días y Horarios')
                     ->modalSubheading(fn ($record) => $record->nombre)
                     ->modalSubmitActionLabel('Guardar')

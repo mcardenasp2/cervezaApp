@@ -211,6 +211,7 @@ class BuscarTransaccion extends Page
         })
         ->sortByDesc('cantidad');
 
+
         $beerPromotionsGroup = [] ;
 
         $startDate = new DateTime(date('Y-m-d'));
@@ -225,7 +226,6 @@ class BuscarTransaccion extends Page
 
             foreach ($promotionalDates as $key2 => $value) {
 
-
                 $promotionsItem = (object) $promotionsItem;
 
                 $details = $this->formSale->ventas_detalles->whereIn('cerveza_id', $promotionsItem->cervezas_ids)
@@ -233,58 +233,62 @@ class BuscarTransaccion extends Page
                     ->whereBetween('created_at', [$value['fecha_inicio'], $value['fecha_fin']])
                     ->whereBetween('mililitros_consumidos', [$promotionsItem->desde_mililitros, $promotionsItem->hasta_mililitros]);
 
-                if($details->count() > 0){
 
-                    $beerPromotionsGroup = [
-                        'promocion' => $promotionsItem,
-                        'detalle_promocion' => $details
-                    ] ;
-
-                    $beerPromotionsGroup = (object) $beerPromotionsGroup;
-                    $groupQuantity = $beerPromotionsGroup->detalle_promocion->count() ;
-                    // Obtengo la cantidad de grupos de productos que se pueden aplicar la promocion
-                    $groupQuantity = $beerPromotionsGroup->promocion->cantidad > 0
-                                    ? (int) ($groupQuantity / $beerPromotionsGroup->promocion->cantidad)
-                                    : 0;
-                    // Obtengo la cantidad de productos que se pueden aplicar la promocion
-                    $totalProductDiscount = $beerPromotionsGroup->promocion->cantidad - $beerPromotionsGroup->promocion->pagar ;
-                    //Obtengo el total de productos que se pueden aplicar la promocion
-                    $totalDiscountedproducts = $groupQuantity * $totalProductDiscount ;
-                    // Cantidad de productos que se evaluaron para promocion
-                    $totalPromotionalProducts = $beerPromotionsGroup->promocion->cantidad * $groupQuantity ;
-                    // Ids de lod productos a descontar
-                    $idsProductDiscount = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->pluck('id') ;
-                    // ids de los productos a evaluar para promocion
-                    $idsProductsPromotion = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->pluck('id') ;
-
-                    $this->formSale->ventas_detalles = $this->formSale->ventas_detalles->map(function($transaccion) use ($idsProductDiscount, $idsProductsPromotion, $promotionsItem) {
-                        if ($idsProductDiscount->contains($transaccion->id)) {
-                            $transaccion->aplica_promocion = true;
-                            $transaccion->producto_promocionado = true;
-                            $transaccion->promocion_id = $promotionsItem->id;
-                        } elseif ($idsProductsPromotion->contains($transaccion->id)) {
-                            $transaccion->aplica_promocion = true;
-                            $transaccion->producto_promocionado = false;
-                            $transaccion->promocion_id = $promotionsItem->id;
-                        }
-                        return $transaccion;
-                    });
-
-                    $totalDiscount = round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->sum('total') , 2);
-
-                    if ($totalDiscount > 0) {
-                        $this->formSale->detalle_promocion_aplicada[] = [
-                            'promocion_id' => $promotionsItem->id,
-                            'cervezas_ids' => json_encode($promotionsItem->cervezas_ids),
-                            'cantidad_mililitros' => round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->sum('mililitros_consumidos') , 2),
-                            'cantidad_items_aplicados' => $totalPromotionalProducts,
-                            'cantidad_gratis' => $totalDiscountedproducts,
-                            'cantidad_promociones' => $groupQuantity ,
-                            'total_descuento' => $totalDiscount,
-                            'descripcion_snapshot' => $groupQuantity.' - '.$promotionsItem->nombre.' ('.implode(', ', $promotionsItem->cervezas_nombres).')'
-                        ] ;
-                    }
+                if($details->count() === 0){
+                    continue ;
                 }
+
+
+                $beerPromotionsGroup = [
+                    'promocion' => $promotionsItem,
+                    'detalle_promocion' => $details
+                ] ;
+
+                $beerPromotionsGroup = (object) $beerPromotionsGroup;
+                $groupQuantity = $beerPromotionsGroup->detalle_promocion->count() ;
+                // Obtengo la cantidad de grupos de productos que se pueden aplicar la promocion
+                $groupQuantity = $beerPromotionsGroup->promocion->cantidad > 0
+                                ? (int) ($groupQuantity / $beerPromotionsGroup->promocion->cantidad)
+                                : 0;
+                // Obtengo la cantidad de productos que se pueden aplicar la promocion
+                $totalProductDiscount = $beerPromotionsGroup->promocion->cantidad - $beerPromotionsGroup->promocion->pagar ;
+                //Obtengo el total de productos que se pueden aplicar la promocion
+                $totalDiscountedproducts = $groupQuantity * $totalProductDiscount ;
+                // Cantidad de productos que se evaluaron para promocion
+                $totalPromotionalProducts = $beerPromotionsGroup->promocion->cantidad * $groupQuantity ;
+                // Ids de lod productos a descontar
+                $idsProductDiscount = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->pluck('id') ;
+                // ids de los productos a evaluar para promocion
+                $idsProductsPromotion = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->pluck('id') ;
+
+                $this->formSale->ventas_detalles = $this->formSale->ventas_detalles->map(function($transaccion) use ($idsProductDiscount, $idsProductsPromotion, $promotionsItem) {
+                    if ($idsProductDiscount->contains($transaccion->id)) {
+                        $transaccion->aplica_promocion = true;
+                        $transaccion->producto_promocionado = true;
+                        $transaccion->promocion_id = $promotionsItem->id;
+                    } elseif ($idsProductsPromotion->contains($transaccion->id)) {
+                        $transaccion->aplica_promocion = true;
+                        $transaccion->producto_promocionado = false;
+                        $transaccion->promocion_id = $promotionsItem->id;
+                    }
+                    return $transaccion;
+                });
+
+                $totalDiscount = round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->sum('total') , 2);
+
+                if ($totalDiscount > 0) {
+                    $this->formSale->detalle_promocion_aplicada[] = [
+                        'promocion_id' => $promotionsItem->id,
+                        'cervezas_ids' => json_encode($promotionsItem->cervezas_ids),
+                        'cantidad_mililitros' => round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->sum('mililitros_consumidos') , 2),
+                        'cantidad_items_aplicados' => $totalPromotionalProducts,
+                        'cantidad_gratis' => $totalDiscountedproducts,
+                        'cantidad_promociones' => $groupQuantity ,
+                        'total_descuento' => $totalDiscount,
+                        'descripcion_snapshot' => $groupQuantity.' - '.$promotionsItem->nombre.' ('.implode(', ', $promotionsItem->cervezas_nombres).')'
+                    ] ;
+                }
+
             }
 
 
