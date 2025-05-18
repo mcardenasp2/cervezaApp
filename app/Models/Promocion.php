@@ -37,6 +37,24 @@ class Promocion extends Model
         'estado'
     ];
 
+    protected $appends = ['horario_dias'];
+
+    public function getDiasLabelAttribute()
+    {
+        return $this->dias->pluck('dia')->unique()->join(', ');
+    }
+
+    public function getHorarioDiasAttribute()
+    {
+        $result = $this->dias->first();
+
+        if ($result) {
+            return $result->hora_inicio . ' hasta ' . $result->hora_fin;
+        }
+
+        return 'Horario no asignado';  // Devuelve algo por defecto si no hay días
+
+    }
 
     public function cervezas()
     {

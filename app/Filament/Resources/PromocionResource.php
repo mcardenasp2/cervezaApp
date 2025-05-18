@@ -56,6 +56,7 @@ class PromocionResource extends Resource
         return [];  // Si no tiene el permiso, no muestra el recurso
     }
 
+
     public static function form(Form $form): Form
     {
         return $form
@@ -65,7 +66,6 @@ class PromocionResource extends Resource
                     ->required()
                     ->maxLength(255),
                 TextInput::make('tipo')
-                    ->default('DESCUENTO')
                     ->label('Tipo')
                     ->required()
                     ->maxLength(255),
@@ -102,6 +102,8 @@ class PromocionResource extends Resource
             ]);
     }
 
+
+
     public static function table(Table $table): Table
     {
         return $table
@@ -111,10 +113,10 @@ class PromocionResource extends Resource
                     ->searchable(),
                 TextColumn::make('fecha_inicio')
                     ->label('Fecha Desde')
-                    ->date('Y-m-d H:i:s'),
+                    ->date('Y-m-d'),
                 TextColumn::make('fecha_fin')
                     ->label('Fecha Hasta')
-                    ->date('Y-m-d  H:i:s'),
+                    ->date('Y-m-d'),
                 TextColumn::make('rango_mililitros')
                     ->label('Rango Mililitros')
                     ->getStateUsing(function ($record) {
@@ -126,6 +128,16 @@ class PromocionResource extends Resource
                     ->badge()
                     ->toggleable()
                     ->separator(', '),
+                TextColumn::make('horario')
+                    ->label('Horario')
+                    ->getStateUsing(function ($record) {
+                        return $record->horario_dias;
+                    }),
+                TextColumn::make('dias_label')
+                    ->label('Días')
+                    ->badge()
+                    ->toggleable()
+                     ->separator(', '),
 
                 BadgeColumn::make('estado')
                     ->label('Estado')

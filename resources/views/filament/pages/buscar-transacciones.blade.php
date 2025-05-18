@@ -45,7 +45,7 @@
             <table class="w-full divide-y divide-gray-200 bg-white rounded shadow">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th colspan="6" class="px-4 py-2 text-center text-sm font-semibold text-gray-700">
+                        <th colspan="5" class="px-4 py-2 text-center text-sm font-semibold text-gray-700">
                             Promociones Activas
                         </th>
                     </tr>
@@ -55,7 +55,6 @@
                         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Inicio</th>
                         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Fin</th>
                         <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Días / Horarios</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Estado</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -63,6 +62,9 @@
                         <tr>
                             <td class="px-4 py-2 text-sm text-gray-800">{{ $promo['nombre'] }}</td>
                             <td class="px-4 py-2 text-sm text-gray-800">
+                                @if ($promo['cervezas']->count() === 0 )
+                                    <p style="color: red"><b>NO EXISTEN CERVEZAS ASIGNADAS</b></p>
+                                @endif
                                 @foreach ($promo['cervezas'] as $cerveza)
                                     <span class="inline-flex items-center px-2 py-1 mb-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         {{ $cerveza['nombre'] }}
@@ -76,6 +78,10 @@
                                 {{ \Carbon\Carbon::parse($promo['fecha_fin'])->format('d/m/Y') }}
                             </td>
                             <td class="px-4 py-2 text-sm text-gray-800">
+                                @if ($promo['dias']->count() === 0 )
+                                    <p style="color: red"><b>NO EXISTEN DIAS ASIGNADOS</b></p>
+                                @endif
+
                                 @foreach ($promo['dias'] as $dia)
                                     <div class="mb-1">
                                         <span class="font-semibold capitalize">{{ $dia['dia'] }}:</span>
@@ -84,11 +90,7 @@
                                     </div>
                                 @endforeach
                             </td>
-                            <td class="px-4 py-2 text-sm">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                    Activa
-                                </span>
-                            </td>
+
                         </tr>
                     @endforeach
                 </tbody>

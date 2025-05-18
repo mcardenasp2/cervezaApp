@@ -57,7 +57,7 @@ class BuscarTransaccion extends Page
             ->where('fecha_fin', '<', date('Y-m-d'))
             ->update(['estado' => 2]);
 
-        return Promocion::with('cervezas', 'dias')->whereHas('dias')->where('estado', 1)->get()
+        return Promocion::with('cervezas', 'dias')->where('estado', 1)->get()
             ->map(function ($promotions) {
                 return [
                     'id' => $promotions->id,
