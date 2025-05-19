@@ -33,6 +33,8 @@ class Promocion extends Model
         'hasta_mililitros',
         'fecha_inicio',
         'fecha_fin',
+        'hora_inicio',
+        'hora_fin',
         'descripcion',
         'estado'
     ];

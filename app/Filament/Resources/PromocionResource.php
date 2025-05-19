@@ -265,6 +265,7 @@ class PromocionResource extends Resource
 
                     })
                     ->action(function ($record, array $data) {
+
                         $diasData = collect($data['dias_seleccionados'])->map(function ($dia) use ($data) {
                             return [
                                 'dia' => $dia,
@@ -278,6 +279,10 @@ class PromocionResource extends Resource
 
                             $record->dias()->delete();
                             $record->dias()->createMany($diasData->toArray());
+
+                            $record->hora_inicio = $data['hora_inicio'] ;
+                            $record->hora_fin =$data['hora_fin'] ;
+                            $record->save();
 
                             Notification::make()
                             ->title('Días y horarios asignados')

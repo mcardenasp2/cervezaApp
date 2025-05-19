@@ -53,9 +53,16 @@ class BuscarTransaccion extends Page
 
     public function getActivePromotions() : array
     {
+        $date = date('Y-m-d');
+
+        $datetime = new DateTime($date);
+        $datetime->modify('-1 day');
+        $newDate = $datetime->format('Y-m-d');
+
         Promocion::where('estado', 1)
-            ->where('fecha_fin', '<', date('Y-m-d'))
+            ->where('fecha_fin', '<', $newDate)
             ->update(['estado' => 2]);
+
 
         return Promocion::with('cervezas', 'dias')->where('estado', 1)->get()
             ->map(function ($promotions) {
