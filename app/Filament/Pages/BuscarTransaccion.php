@@ -10,6 +10,9 @@ use App\Models\Pulsera;
 use App\Models\Transaccion;
 use App\Models\VentasDetalle;
 use App\Models\VentasEncabezado;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use DateTime;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Actions\ButtonAction;
@@ -17,6 +20,7 @@ use Filament\Pages\Actions\Modal\Actions\ButtonAction as ActionsButtonAction;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 class BuscarTransaccion extends Page
@@ -49,11 +53,18 @@ class BuscarTransaccion extends Page
 
     public function getActivePromotions() : array
     {
+        $date = date('Y-m-d');
+
+        $datetime = new DateTime($date);
+        $datetime->modify('-1 day');
+        $newDate = $datetime->format('Y-m-d');
+
         Promocion::where('estado', 1)
-            ->where('fecha_fin', '<', now())
+            ->where('fecha_fin', '<', $newDate)
             ->update(['estado' => 2]);
 
-        return Promocion::with('cervezas')->where('estado', 1)->get()
+
+        return Promocion::with('cervezas', 'dias')->where('estado', 1)->get()
             ->map(function ($promotions) {
                 return [
                     'id' => $promotions->id,
@@ -64,8 +75,10 @@ class BuscarTransaccion extends Page
                     'tipo' => $promotions->tipo,
                     'cantidad' => $promotions->cantidad,
                     'pagar' => $promotions->pagar,
+                    'dias' => $promotions->dias,
                     'desde_mililitros' => $promotions->desde_mililitros,
-                    'hasta_mililitros' => $promotions->hasta_mililitros
+                    'hasta_mililitros' => $promotions->hasta_mililitros,
+
                 ];
             })->toArray();
     }
@@ -95,6 +108,7 @@ class BuscarTransaccion extends Page
     {
         $this->clearFormSale() ;
         $this->promotions = $this->getActivePromotions();
+
         // Buscar las promocoones y si estan activas inactivarlas si ya paso la fecha
         $this->notification = [] ;
         $this->total = 0 ;
@@ -150,8 +164,6 @@ class BuscarTransaccion extends Page
             });
         $this->checkPromotions();
 
-
-
         $this->formSale->total = round($this->formSale->ventas_detalles->sum('total'), 2) ;
         $this->formSale->descuento = round(collect($this->formSale->detalle_promocion_aplicada)->sum('total_descuento'), 2) ;
         $this->formSale->total_pagar = $this->formSale->total - $this->formSale->descuento ;
@@ -165,7 +177,8 @@ class BuscarTransaccion extends Page
                 'total' => $transaccion->total,
                 'aplica_promocion' => $transaccion->aplica_promocion,
                 'producto_promocionado' => $transaccion->producto_promocionado,
-                'promocion_id' => $transaccion->promocion_id
+                'promocion_id' => $transaccion->promocion_id,
+                'created_at' => $transaccion->created_at
             ];
             return $transaccion;
         })->toArray();
@@ -186,85 +199,148 @@ class BuscarTransaccion extends Page
 
     public function checkPromotions() : void
     {
-        $newPromotions = collect($this->promotions)->sortByDesc('cantidad')
-        ->flatMap(function ($promotionsItem) {
-            $promotionsItem = (object) $promotionsItem;
+        $newPromotions = collect($this->promotions)->map(function ($promotionsItem) {
+            return [
+                'id' => $promotionsItem['id'],
+                'nombre' => $promotionsItem['nombre'],
+                'cervezas_ids' => $promotionsItem['cervezas']->pluck('id')->toArray(),
+                'cervezas_nombres' => $promotionsItem['cervezas']->pluck('nombre')->toArray(),
+                'fecha_inicio' => $promotionsItem['fecha_inicio'],
+                'fecha_fin' => $promotionsItem['fecha_fin'],
+                'tipo' => $promotionsItem['tipo'],
+                'cantidad' => $promotionsItem['cantidad'],
+                'pagar' => $promotionsItem['pagar'],
+                'dias' => $promotionsItem['dias'],
+                'desde_mililitros' => $promotionsItem['desde_mililitros'],
+                'hasta_mililitros' => $promotionsItem['hasta_mililitros'],
+            ];
+        })
+        ->sortByDesc('cantidad');
 
-            return $promotionsItem->cervezas->map(function ($cerveza) use ($promotionsItem) {
-                return [
-                    'id' => $promotionsItem->id,
-                    'nombre' => $promotionsItem->nombre,
-                    'cerveza_id' => $cerveza->id,  // Asumimos que quieres agregar el ID de la cerveza
-                    'cerveza_nombre' => $cerveza->nombre,  // Nombre de la cerveza
-                    'fecha_inicio' => $promotionsItem->fecha_inicio,
-                    'fecha_fin' => $promotionsItem->fecha_fin,
-                    'tipo' => $promotionsItem->tipo,
-                    'cantidad' => $promotionsItem->cantidad,
-                    'pagar' => $promotionsItem->pagar,
-                    'desde_mililitros' => $promotionsItem->desde_mililitros,
-                    'hasta_mililitros' => $promotionsItem->hasta_mililitros,
-                ];
-            });
-        });
 
         $beerPromotionsGroup = [] ;
+
+        $startDate = new DateTime(date('Y-m-d'));
+        $startDate = $startDate->modify('-2 day');
+        $startDate = $startDate->format('Y-m-d');
+
+
         foreach ($newPromotions as $key => $promotionsItem) {
-            $promotionsItem = (object) $promotionsItem;
+            $promotionsItem['fecha_inicio'] = $startDate;
+            $promotionsItem['fecha_fin'] = date('Y-m-d') ;
+            $promotionalDates = $this->generatePromotionalDates($promotionsItem) ;
 
-            $details = $this->formSale->ventas_detalles->where('cerveza_id', $promotionsItem->cerveza_id)
-                ->where('aplica_promocion', false)
-                ->whereBetween('mililitros_consumidos', [$promotionsItem->desde_mililitros, $promotionsItem->hasta_mililitros]);
+            foreach ($promotionalDates as $key2 => $value) {
 
-            $beerPromotionsGroup = [
-                'promocion' => $promotionsItem,
-                'detalle_promocion' => $details
-            ] ;
+                $promotionsItem = (object) $promotionsItem;
 
-            $beerPromotionsGroup = (object) $beerPromotionsGroup;
-            $groupQuantity = $beerPromotionsGroup->detalle_promocion->count() ;
-            // Obtengo la cantidad de grupos de productos que se pueden aplicar la promocion
-            $groupQuantity = $beerPromotionsGroup->promocion->cantidad > 0
-                            ? (int) ($groupQuantity / $beerPromotionsGroup->promocion->cantidad)
-                            : 0;
-            // Obtengo la cantidad de productos que se pueden aplicar la promocion
-            $totalProductDiscount = $beerPromotionsGroup->promocion->cantidad - $beerPromotionsGroup->promocion->pagar ;
-            //Obtengo el total de productos que se pueden aplicar la promocion
-            $totalDiscountedproducts = $groupQuantity * $totalProductDiscount ;
-            // Cantidad de productos que se evaluaron para promocion
-            $totalPromotionalProducts = $beerPromotionsGroup->promocion->cantidad * $groupQuantity ;
-            // Ids de lod productos a descontar
-            $idsProductDiscount = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->pluck('id') ;
-            // ids de los productos a evaluar para promocion
-            $idsProductsPromotion = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->pluck('id') ;
+                $details = $this->formSale->ventas_detalles->whereIn('cerveza_id', $promotionsItem->cervezas_ids)
+                    ->where('aplica_promocion', false)
+                    ->whereBetween('created_at', [$value['fecha_inicio'], $value['fecha_fin']])
+                    ->whereBetween('mililitros_consumidos', [$promotionsItem->desde_mililitros, $promotionsItem->hasta_mililitros]);
 
-            $this->formSale->ventas_detalles = $this->formSale->ventas_detalles->map(function($transaccion) use ($idsProductDiscount, $idsProductsPromotion, $promotionsItem) {
-                if ($idsProductDiscount->contains($transaccion->id)) {
-                    $transaccion->aplica_promocion = true;
-                    $transaccion->producto_promocionado = true;
-                    $transaccion->promocion_id = $promotionsItem->id;
-                } elseif ($idsProductsPromotion->contains($transaccion->id)) {
-                    $transaccion->aplica_promocion = true;
-                    $transaccion->producto_promocionado = false;
-                    $transaccion->promocion_id = $promotionsItem->id;
+
+                if($details->count() === 0){
+                    continue ;
                 }
-                return $transaccion;
-            });
 
-            $totalDiscount = round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->sum('total') , 2);
 
-            if ($totalDiscount > 0) {
-                $this->formSale->detalle_promocion_aplicada[] = [
-                    'promocion_id' => $promotionsItem->id,
-                    'cerveza_id' => $promotionsItem->cerveza_id,
-                    'cantidad_mililitros' => round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->sum('mililitros_consumidos') , 2),
-                    'cantidad_items_aplicados' => $totalPromotionalProducts,
-                    'cantidad_gratis' => $totalDiscountedproducts,
-                    'total_descuento' => $totalDiscount,
-                    'descripcion_snapshot' => $promotionsItem->nombre.' - '.$promotionsItem->cerveza_nombre
+                $beerPromotionsGroup = [
+                    'promocion' => $promotionsItem,
+                    'detalle_promocion' => $details
                 ] ;
+
+                $beerPromotionsGroup = (object) $beerPromotionsGroup;
+                $groupQuantity = $beerPromotionsGroup->detalle_promocion->count() ;
+                // Obtengo la cantidad de grupos de productos que se pueden aplicar la promocion
+                $groupQuantity = $beerPromotionsGroup->promocion->cantidad > 0
+                                ? (int) ($groupQuantity / $beerPromotionsGroup->promocion->cantidad)
+                                : 0;
+                // Obtengo la cantidad de productos que se pueden aplicar la promocion
+                $totalProductDiscount = $beerPromotionsGroup->promocion->cantidad - $beerPromotionsGroup->promocion->pagar ;
+                //Obtengo el total de productos que se pueden aplicar la promocion
+                $totalDiscountedproducts = $groupQuantity * $totalProductDiscount ;
+                // Cantidad de productos que se evaluaron para promocion
+                $totalPromotionalProducts = $beerPromotionsGroup->promocion->cantidad * $groupQuantity ;
+                // Ids de lod productos a descontar
+                $idsProductDiscount = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->pluck('id') ;
+                // ids de los productos a evaluar para promocion
+                $idsProductsPromotion = $beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->pluck('id') ;
+
+                $this->formSale->ventas_detalles = $this->formSale->ventas_detalles->map(function($transaccion) use ($idsProductDiscount, $idsProductsPromotion, $promotionsItem) {
+                    if ($idsProductDiscount->contains($transaccion->id)) {
+                        $transaccion->aplica_promocion = true;
+                        $transaccion->producto_promocionado = true;
+                        $transaccion->promocion_id = $promotionsItem->id;
+                    } elseif ($idsProductsPromotion->contains($transaccion->id)) {
+                        $transaccion->aplica_promocion = true;
+                        $transaccion->producto_promocionado = false;
+                        $transaccion->promocion_id = $promotionsItem->id;
+                    }
+                    return $transaccion;
+                });
+
+                $totalDiscount = round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalDiscountedproducts)->sum('total') , 2);
+
+                if ($totalDiscount > 0) {
+                    $this->formSale->detalle_promocion_aplicada[] = [
+                        'promocion_id' => $promotionsItem->id,
+                        'cervezas_ids' => json_encode($promotionsItem->cervezas_ids),
+                        'cantidad_mililitros' => round($beerPromotionsGroup->detalle_promocion->sortBy('mililitros_consumidos')->take($totalPromotionalProducts)->sum('mililitros_consumidos') , 2),
+                        'cantidad_items_aplicados' => $totalPromotionalProducts,
+                        'cantidad_gratis' => $totalDiscountedproducts,
+                        'cantidad_promociones' => $groupQuantity ,
+                        'total_descuento' => $totalDiscount,
+                        'descripcion_snapshot' => $groupQuantity.' - '.$promotionsItem->nombre.' ('.implode(', ', $promotionsItem->cervezas_nombres).')'
+                    ] ;
+                }
+
+            }
+
+
+        }
+
+    }
+
+
+
+    public function generatePromotionalDates( array $promotion) : array
+    {
+        $fechaInicio = Carbon::parse($promotion['fecha_inicio']);
+        $fechaFin = Carbon::parse($promotion['fecha_fin']);
+        $diasConfigurados = $promotion['dias']; // Colección de PromocionDia
+
+        $periodo = CarbonPeriod::create($fechaInicio, $fechaFin);
+
+        $fechasPromocion = [];
+
+        foreach ($periodo as $fecha) {
+            $diaSemana = strtolower($fecha->locale('es')->isoFormat('dddd')); // Ej: 'lunes'
+
+            // Verifica si este día está en los días configurados
+            $diaConfig = $diasConfigurados->first(fn ($d) => strtolower($d->dia) === $diaSemana);
+
+            if ($diaConfig) {
+                $horaInicio = $diaConfig->hora_inicio;
+                $horaFin = $diaConfig->hora_fin;
+
+                $fechaInicioCompleta = $fecha->copy()->setTimeFromTimeString($horaInicio);
+                $fechaFinCompleta = $fecha->copy()->setTimeFromTimeString($horaFin);
+
+                // Si la hora de fin es menor o igual, asumimos que cruza al siguiente día
+                if ($horaFin <= $horaInicio) {
+                    $fechaFinCompleta->addDay();
+                }
+
+                $fechasPromocion[] = [
+                    'fecha_inicio' => $fechaInicioCompleta->format('Y-m-d H:i:s'),
+                    'fecha_fin' => $fechaFinCompleta->format('Y-m-d H:i:s'),
+                    'dia' => ucfirst($diaSemana),
+                ];
             }
         }
 
+        return $fechasPromocion ;
     }
 
 
@@ -314,7 +390,8 @@ class BuscarTransaccion extends Page
                     'total' => $value['total'],
                     'aplica_promocion' => $value['aplica_promocion'],
                     'producto_promocionado' => $value['producto_promocionado'],
-                    'promocion_id' => $value['promocion_id']
+                    'promocion_id' => $value['promocion_id'],
+                    'fecha_transaccion' => $value['created_at']
                 ]);
             }
 
@@ -322,10 +399,11 @@ class BuscarTransaccion extends Page
                 DetallePromocionAplicada::create([
                     'venta_id' => $salesHeader->id,
                     'promocion_id' => $value['promocion_id'],
-                    'cerveza_id' => $value['cerveza_id'],
+                    'cervezas_ids' => $value['cervezas_ids'],
                     'cantidad_mililitros' => $value['cantidad_mililitros'],
                     'cantidad_items_aplicados' => $value['cantidad_items_aplicados'],
                     'cantidad_gratis' => $value['cantidad_gratis'],
+                    'cantidad_promociones' => $value['cantidad_promociones'],
                     'total_descuento' => $value['total_descuento'],
                     'descripcion_snapshot' => $value['descripcion_snapshot']
                 ]);

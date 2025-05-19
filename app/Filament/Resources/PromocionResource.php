@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\PromocionDiaRelationManagerResource\RelationManagers\DiasRelationManager;
 use App\Filament\Resources\PromocionResource\Pages;
 use App\Filament\Resources\PromocionResource\RelationManagers;
 use App\Models\Cerveza;
@@ -25,8 +26,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Actions\Modal\Action as ModalAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Group;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TimePicker;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder; // ✅ Correcto
+use Illuminate\Support\Facades\DB;
 
 class PromocionResource extends Resource
 {
@@ -48,6 +55,7 @@ class PromocionResource extends Resource
 
         return [];  // Si no tiene el permiso, no muestra el recurso
     }
+
 
     public static function form(Form $form): Form
     {
@@ -81,12 +89,10 @@ class PromocionResource extends Resource
                     ->label('Hasta Mililítros')
                     ->required()
                     ->maxLength(255),
-                DateTimePicker::make('fecha_inicio')
-                    ->label('Fecha Inicio')
-                    ->format('Y-m-d H:i:s')
-                    ->required(),
-                DateTimePicker::make('fecha_fin')
-                    ->format('Y-m-d H:i:s')
+                DatePicker::make('fecha_inicio')
+                ->label('Fecha Inicio')
+                ->required(),
+                DatePicker::make('fecha_fin')
                     ->label('Fecha Fin')
                     ->required(),
                 Textarea::make('descripcion')
@@ -95,6 +101,8 @@ class PromocionResource extends Resource
                     ->maxLength(255),
             ]);
     }
+
+
 
     public static function table(Table $table): Table
     {
@@ -105,21 +113,35 @@ class PromocionResource extends Resource
                     ->searchable(),
                 TextColumn::make('fecha_inicio')
                     ->label('Fecha Desde')
-                    ->date('Y-m-d H:i:s'),
+                    ->date('Y-m-d'),
                 TextColumn::make('fecha_fin')
                     ->label('Fecha Hasta')
-                    ->date('Y-m-d  H:i:s'),
-                TextColumn::make('rango_mililitros')
-                    ->label('Rango Mililitros')
-                    ->getStateUsing(function ($record) {
-                        return $record->desde_mililitros . ' - ' . $record->hasta_mililitros;
-                    }),
+                    ->date('Y-m-d'),
+
 
                 TextColumn::make('cervezas.nombre')
                     ->label('Cervezas')
                     ->badge()
                     ->toggleable()
                     ->separator(', '),
+
+                TextColumn::make('dias_label')
+                    ->label('Días')
+                    ->badge()
+                    ->toggleable()
+                     ->separator(', '),
+
+                TextColumn::make('horario')
+                    ->label('Horario')
+                    ->getStateUsing(function ($record) {
+                        return $record->horario_dias;
+                    }),
+
+                TextColumn::make('rango_mililitros')
+                    ->label('Rango Mililitros')
+                    ->getStateUsing(function ($record) {
+                        return $record->desde_mililitros . ' - ' . $record->hasta_mililitros;
+                    }),
 
                 BadgeColumn::make('estado')
                     ->label('Estado')
@@ -192,6 +214,93 @@ class PromocionResource extends Resource
                         ->success()
                         ->send();
                 }),
+                Tables\Actions\Action::make('asignarDias')
+                    ->visible(fn () => auth()->user()->can('promocion-crear-dias'))
+                    ->iconButton()
+                    ->tooltip('Asignar días y horarios')
+                    ->color('primary')
+                    ->icon('heroicon-o-calendar')
+                    ->disabled(fn ($record) => $record->estado !== 1)
+                    ->modalHeading('Asignar Días y Horarios')
+                    ->modalSubheading(fn ($record) => $record->nombre)
+                    ->modalSubmitActionLabel('Guardar')
+                    ->modalCancelActionLabel('Cerrar')
+                    ->form([
+                        Grid::make(1)->schema([
+                            Grid::make(2)->schema([
+                                TimePicker::make('hora_inicio')
+                                    ->label('Desde')
+                                    ->required(),
+
+                                TimePicker::make('hora_fin')
+                                    ->label('Hasta')
+                                    ->required(),
+                            ]),
+                            CheckboxList::make('dias_seleccionados')
+                                ->label('Selecciona los días')
+                                ->options([
+                                    'lunes' => 'Lunes',
+                                    'martes' => 'Martes',
+                                    'miércoles' => 'Miércoles',
+                                    'jueves' => 'Jueves',
+                                    'viernes' => 'Viernes',
+                                    'sábado' => 'Sábado',
+                                    'domingo' => 'Domingo',
+                                ])
+                                ->columns(2)
+                                ->required(), // importante para que actualice los campos condicionales
+                        ]),
+
+                    ])
+                    ->mountUsing(function ($record, $form) {
+
+                        $dias = $record->dias;
+
+                        $form->fill([
+                            'dias_seleccionados' => $dias->pluck('dia')->toArray(),
+                            'hora_inicio' => optional($dias->first())->hora_inicio,
+                            'hora_fin' => optional($dias->first())->hora_fin,
+                        ]);
+
+
+                    })
+                    ->action(function ($record, array $data) {
+
+                        $diasData = collect($data['dias_seleccionados'])->map(function ($dia) use ($data) {
+                            return [
+                                'dia' => $dia,
+                                'hora_inicio' => $data['hora_inicio'],
+                                'hora_fin' => $data['hora_fin'],
+                            ];
+                        });
+
+                        try {
+                            DB::beginTransaction();
+
+                            $record->dias()->delete();
+                            $record->dias()->createMany($diasData->toArray());
+
+                            $record->hora_inicio = $data['hora_inicio'] ;
+                            $record->hora_fin =$data['hora_fin'] ;
+                            $record->save();
+
+                            Notification::make()
+                            ->title('Días y horarios asignados')
+                            ->success()
+                            ->send();
+
+                            DB::commit() ;
+
+                        } catch (\Throwable $th) {
+                            DB::rollBack() ;
+
+                            Notification::make()
+                            ->title('Error')
+                            ->body($th->getMessage())
+                            ->danger()
+                            ->send();
+                        }
+                    }),
                 Tables\Actions\Action::make('finalizar')
                     ->iconButton()
                     ->tooltip('Finalizar promoción')
@@ -257,7 +366,7 @@ class PromocionResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
+         return [
             //
         ];
     }

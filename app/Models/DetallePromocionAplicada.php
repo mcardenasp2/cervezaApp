@@ -28,12 +28,13 @@ class DetallePromocionAplicada extends Model
     protected $fillable = [
         'venta_id',
         'promocion_id',
-        'cerveza_id',
+        'cervezas_ids',
         'cantidad_mililitros',
         'cantidad_items_aplicados',
         'cantidad_gratis',
         'total_descuento',
         'descripcion_snapshot',
+        'cantidad_promociones',
         'estado'
     ];
 
